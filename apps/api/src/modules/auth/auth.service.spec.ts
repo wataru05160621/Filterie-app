@@ -3,12 +3,16 @@ import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn(),
+  compare: jest.fn(),
+}));
+
+import * as bcrypt from 'bcryptjs';
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let usersService: UsersService;
-  let jwtService: JwtService;
 
   const mockUser = {
     id: '1',
@@ -45,8 +49,10 @@ describe('AuthService', () => {
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
-    usersService = module.get<UsersService>(UsersService);
-    jwtService = module.get<JwtService>(JwtService);
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -62,7 +68,7 @@ describe('AuthService', () => {
       };
 
       const hashedPassword = 'hashedPassword123';
-      jest.spyOn(bcrypt, 'hash').mockImplementation(() => Promise.resolve(hashedPassword));
+      (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
 
       const newUser = {
         ...mockUser,
@@ -78,8 +84,8 @@ describe('AuthService', () => {
 
       const result = await authService.register(registerDto);
 
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
+      expect(result).toHaveProperty('access_token');
+      expect(result).toHaveProperty('refresh_token');
       expect(result).toHaveProperty('user');
       expect(result.user).not.toHaveProperty('password');
       expect(result.user.email).toBe(registerDto.email);
@@ -113,14 +119,14 @@ describe('AuthService', () => {
         password: 'password123',
       };
 
-      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
       mockJwtService.sign.mockReturnValue('test.jwt.token');
 
       const result = await authService.login(loginDto);
 
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
+      expect(result).toHaveProperty('access_token');
+      expect(result).toHaveProperty('refresh_token');
       expect(result).toHaveProperty('user');
       expect(result.user).not.toHaveProperty('password');
       expect(result.user.email).toBe(loginDto.email);
@@ -143,7 +149,7 @@ describe('AuthService', () => {
         password: 'wrongpassword',
       };
 
-      jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(false));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
 
       await expect(authService.login(loginDto)).rejects.toThrow(UnauthorizedException);
@@ -189,9 +195,9 @@ describe('AuthService', () => {
 
       const result = await authService.refreshToken(refreshToken);
 
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
-      expect(result.accessToken).toBe('new.jwt.token');
+      expect(result).toHaveProperty('access_token');
+      expect(result).toHaveProperty('refresh_token');
+      expect(result.access_token).toBe('new.jwt.token');
     });
 
     it('should throw UnauthorizedException for invalid refresh token', async () => {

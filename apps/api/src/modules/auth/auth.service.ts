@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 interface RegisterDto {
   email: string;
@@ -15,8 +15,8 @@ interface LoginDto {
 }
 
 interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
   user: {
     id: string;
     email: string;
@@ -107,7 +107,7 @@ export class AuthService {
     }
   }
 
-  async refreshToken(refreshToken: string): Promise<AuthResponse> {
+  async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
     try {
       const payload = this.jwtService.verify(refreshToken, {
         secret: process.env['JWT_REFRESH_SECRET'],
@@ -124,14 +124,7 @@ export class AuthService {
 
       const tokens = this.generateTokens(user.id, user.email);
       
-      return {
-        ...tokens,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-      };
+      return tokens;
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -146,14 +139,14 @@ export class AuthService {
     return null;
   }
 
-  private generateTokens(userId: string, email: string): { accessToken: string; refreshToken: string } {
+  private generateTokens(userId: string, email: string): { access_token: string; refresh_token: string } {
     const payload = { sub: userId, email };
 
-    const accessToken = this.jwtService.sign(payload, {
+    const access_token = this.jwtService.sign(payload, {
       expiresIn: '15m',
     });
 
-    const refreshToken = this.jwtService.sign(
+    const refresh_token = this.jwtService.sign(
       { ...payload, type: 'refresh' },
       {
         secret: process.env['JWT_REFRESH_SECRET'] || 'refresh-secret',
@@ -162,8 +155,8 @@ export class AuthService {
     );
 
     return {
-      accessToken,
-      refreshToken,
+      access_token,
+      refresh_token,
     };
   }
 }
