@@ -24,6 +24,87 @@ Filterieは、一次情報に素早くアクセスし、AIフィルタリング�
 - コンポーネントは関数型で記述
 - テストを重視（Jest + React Testing Library）
 
+### 4. テスト駆動開発（TDD）方針
+このプロジェクトはテスト駆動開発で進めます。以下の手順を厳守してください：
+
+#### TDDサイクル
+1. **Red（失敗）**: 実装前に失敗するテストを書く
+2. **Green（成功）**: テストを通る最小限の実装を行う
+3. **Refactor（改善）**: コードを整理・最適化する
+
+#### 実装手順
+1. **機能要件の明確化**
+   - 実装する機能の仕様を明確にする
+   - 入力・出力・エッジケースを定義する
+
+2. **テストファースト**
+   ```typescript
+   // 例: ユーザー認証サービスのテスト
+   describe('AuthService', () => {
+     it('should authenticate user with valid credentials', async () => {
+       // Arrange
+       const credentials = { email: 'test@example.com', password: 'password123' };
+       
+       // Act
+       const result = await authService.login(credentials);
+       
+       // Assert
+       expect(result.accessToken).toBeDefined();
+       expect(result.user.email).toBe(credentials.email);
+     });
+   });
+   ```
+
+3. **最小限の実装**
+   - テストを通すための最小限のコードを書く
+   - 過度な最適化は避ける
+
+4. **リファクタリング**
+   - テストが通ることを確認しながらコードを改善
+   - DRY原則、SOLID原則を適用
+
+#### テストの種類と優先順位
+1. **単体テスト（Unit Tests）** - 最優先
+   - サービス、ユーティリティ関数
+   - Reactコンポーネント
+   - カバレッジ目標: 80%以上
+
+2. **統合テスト（Integration Tests）** - 重要
+   - API エンドポイント
+   - データベース操作
+   - 外部サービス連携
+
+3. **E2Eテスト（End-to-End Tests）** - 主要フローのみ
+   - ユーザー登録・ログイン
+   - 記事の取得・表示
+   - 検索機能
+
+#### テストファイルの配置
+```
+src/
+├── modules/
+│   ├── auth/
+│   │   ├── auth.service.ts
+│   │   ├── auth.service.spec.ts    # 単体テスト
+│   │   └── auth.integration.spec.ts # 統合テスト
+│   └── articles/
+│       ├── articles.service.ts
+│       └── articles.service.spec.ts
+└── e2e/
+    ├── auth.e2e-spec.ts
+    └── articles.e2e-spec.ts
+```
+
+#### テストデータとモック
+- テストデータは各テストファイルで定義
+- 外部依存はモック化
+- データベースはインメモリDBまたはテスト用DBを使用
+
+#### CI/CDパイプライン
+- プッシュ前に全テストを実行
+- GitHub Actionsでテスト自動実行
+- テストカバレッジレポートの生成
+
 ## 重要なディレクトリ構成
 ```
 Filterie-App/
