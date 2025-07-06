@@ -1,5 +1,5 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
+import { Resolver, Query, Mutation, Args, ID, Subscription } from '@nestjs/graphql';
+import { UseGuards, Inject } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SourcesService } from './sources.service';
 import { Source, TierEvaluation } from './entities/source.entity';
@@ -8,11 +8,18 @@ import { UpdateSourceInput } from './dto/update-source.input';
 import { SourceFilterInput } from './dto/source-filter.input';
 import { PaginationInput } from './dto/pagination.input';
 import { SourceConnection } from './dto/source-connection';
+import { PubSubEngine } from 'graphql-subscriptions';
+import { PUB_SUB } from '../pubsub/pubsub.module';
+import { SubscriptionEvent } from '../pubsub/subscription-events';
+import { SourceFeedFetchedPayload } from '../pubsub/dto/source-feed-fetched.object';
 
 @Resolver(() => Source)
 @UseGuards(JwtAuthGuard)
 export class SourcesResolver {
-  constructor(private readonly sourcesService: SourcesService) {}
+  constructor(
+    private readonly sourcesService: SourcesService,
+    @Inject(PUB_SUB) private pubSub: PubSubEngine,
+  ) {}
 
   @Mutation(() => Source)
   async createSource(
@@ -39,7 +46,14 @@ export class SourcesResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('input') updateSourceInput: UpdateSourceInput,
   ): Promise<Source> {
-    return this.sourcesService.update(id, updateSourceInput);
+    const source = await this.sourcesService.update(id, updateSourceInput);
+    
+    // 情報源更新を通知
+    await this.pubSub.publish(SubscriptionEvent.SOURCE_UPDATED, {
+      [SubscriptionEvent.SOURCE_UPDATED]: source,
+    });
+    
+    return source;
   }
 
   @Mutation(() => Boolean)
@@ -50,5 +64,18 @@ export class SourcesResolver {
   @Mutation(() => TierEvaluation)
   async evaluateSourceTier(@Args('url') url: string): Promise<TierEvaluation> {
     return this.sourcesService.evaluateTier(url);
+  }
+  
+  // サブスクリプション
+  @Subscription(() => Source)
+  sourceUpdated() {
+    return this.pubSub.asyncIterator(SubscriptionEvent.SOURCE_UPDATED);
+  }
+
+  @Subscription(() => SourceFeedFetchedPayload, {
+    description: '情報源のフィード取得完了通知',
+  })
+  sourceFeedFetched() {
+    return this.pubSub.asyncIterator(SubscriptionEvent.SOURCE_FEED_FETCHED);
   }
 }

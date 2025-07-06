@@ -9,6 +9,11 @@ import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './modules/health/health.module';
 import { SourcesModule } from './modules/sources/sources.module';
+import { ArticlesModule } from './modules/articles/articles.module';
+import { FeedModule } from './modules/feed/feed.module';
+import { AiModule } from './modules/ai/ai.module';
+import { PreferencesModule } from './modules/preferences/preferences.module';
+import { PubSubModule } from './modules/pubsub/pubsub.module';
 
 @Module({
   imports: [
@@ -31,7 +36,26 @@ import { SourcesModule } from './modules/sources/sources.module';
       sortSchema: true,
       playground: process.env['NODE_ENV'] !== 'production',
       introspection: process.env['NODE_ENV'] !== 'production',
-      context: ({ req, res }: any) => ({ req, res }),
+      context: ({ req, res, connection }: any) => {
+        // WebSocket接続の場合
+        if (connection) {
+          return { req: connection.context };
+        }
+        // HTTP接続の場合
+        return { req, res };
+      },
+      subscriptions: {
+        'graphql-ws': {
+          onConnect: (context: any) => {
+            const { connectionParams } = context;
+            // 認証トークンの検証
+            if (connectionParams?.authorization) {
+              return { authorization: connectionParams.authorization };
+            }
+            throw new Error('Missing auth');
+          },
+        },
+      },
       formatError: (error) => {
         const graphQLFormattedError = {
           message: error.message,
@@ -44,10 +68,15 @@ import { SourcesModule } from './modules/sources/sources.module';
 
     // Feature modules
     PrismaModule,
+    PubSubModule,
     HealthModule,
     AuthModule,
     UsersModule,
     SourcesModule,
+    ArticlesModule,
+    FeedModule,
+    AiModule,
+    PreferencesModule,
   ],
   controllers: [],
   providers: [],

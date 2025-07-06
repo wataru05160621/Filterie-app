@@ -15,7 +15,7 @@ export class User {
   name: string;
 
   @Field({ nullable: true })
-  avatarUrl?: string;
+  avatarUrl?: string | null;
 
   @Field()
   createdAt: Date;

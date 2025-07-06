@@ -12,7 +12,7 @@ export class Source {
   url: string;
 
   @Field({ nullable: true })
-  feedUrl?: string;
+  feedUrl?: string | null;
 
   @Field(() => Int)
   tier: number;
@@ -27,7 +27,7 @@ export class Source {
   isActive: boolean;
 
   @Field({ nullable: true })
-  lastFetchedAt?: Date;
+  lastFetchedAt?: Date | null;
 
   @Field()
   createdAt: Date;

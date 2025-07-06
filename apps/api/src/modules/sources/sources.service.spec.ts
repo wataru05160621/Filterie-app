@@ -129,6 +129,7 @@ describe('SourcesService', () => {
 
       expect(mockPrismaService.source.findMany).toHaveBeenCalledWith({
         where: { isActive },
+        orderBy: { createdAt: 'desc' },
       });
       expect(result).toEqual(mockFilteredSources);
     });
@@ -142,6 +143,7 @@ describe('SourcesService', () => {
 
       expect(mockPrismaService.source.findMany).toHaveBeenCalledWith({
         where: { language },
+        orderBy: { createdAt: 'desc' },
       });
       expect(result).toEqual(mockFilteredSources);
     });
@@ -155,6 +157,7 @@ describe('SourcesService', () => {
 
       expect(mockPrismaService.source.findMany).toHaveBeenCalledWith({
         where: filters,
+        orderBy: { createdAt: 'desc' },
       });
       expect(result).toEqual(mockFilteredSources);
     });
