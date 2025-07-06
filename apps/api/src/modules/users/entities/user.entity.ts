@@ -1,0 +1,25 @@
+import { ObjectType, Field, ID, HideField } from '@nestjs/graphql';
+
+@ObjectType()
+export class User {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  email: string;
+
+  @HideField()
+  password: string;
+
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  avatarUrl?: string;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+}

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 🚀 Multi-Agent Communication Demo 環境構築
-# 参考: setup_full_environment.sh
+# 🚀 Filterie開発用マルチエージェントシステム環境構築
+# TDD開発フローに基づいたエージェント配置
 
 set -e  # エラー時に停止
 
@@ -14,8 +14,8 @@ log_success() {
     echo -e "\033[1;34m[SUCCESS]\033[0m $1"
 }
 
-echo "🤖 Multi-Agent Communication Demo 環境構築"
-echo "==========================================="
+echo "🤖 Filterie開発用マルチエージェントシステム環境構築"
+echo "==================================================="
 echo ""
 
 # STEP 1: 既存セッションクリーンアップ
@@ -31,8 +31,8 @@ rm -f ./tmp/worker*_done.txt 2>/dev/null && log_info "既存の完了ファイ�
 log_success "✅ クリーンアップ完了"
 echo ""
 
-# STEP 2: multiagentセッション作成（4ペイン：boss1 + worker1,2,3）
-log_info "📺 multiagentセッション作成開始 (4ペイン)..."
+# STEP 2: multiagentセッション作成（5ペイン：ARCHITECT + TEST_ENGINEER + BACKEND_DEV + FRONTEND_DEV + QA_ENGINEER）
+log_info "📺 multiagentセッション作成開始 (5ペイン)..."
 
 # セッション作成
 log_info "セッション作成中..."
@@ -46,30 +46,31 @@ fi
 
 log_info "セッション作成成功"
 
-# 2x2グリッド作成（ウィンドウ名使用でbase-index非依存）
+# 5ペイン作成（3上 + 2下）
 log_info "グリッド作成中..."
 
-# 水平分割（ウィンドウ名で指定）
-log_info "水平分割実行中..."
-tmux split-window -h -t "multiagent:agents"
+# まず垂直に分割（上下）
+log_info "垂直分割実行中..."
+tmux split-window -v -t "multiagent:agents" -p 40
 
-# 左上ペインを選択して垂直分割
-log_info "左側垂直分割実行中..."
-tmux select-pane -t "multiagent:agents" -L  # 左のペインを選択
-tmux split-window -v
+# 上側を3分割
+log_info "上側3分割実行中..."
+tmux select-pane -t "multiagent:agents" -U
+tmux split-window -h -p 66
+tmux split-window -h -p 50
 
-# 右上ペインを選択して垂直分割
-log_info "右側垂直分割実行中..."
-tmux select-pane -t "multiagent:agents" -R  # 右のペインを選択
-tmux split-window -v
+# 下側を2分割
+log_info "下側2分割実行中..."
+tmux select-pane -t "multiagent:agents" -D
+tmux split-window -h -p 50
 
 # ペインの配置確認
 log_info "ペイン配置確認中..."
 PANE_COUNT=$(tmux list-panes -t "multiagent:agents" | wc -l)
 log_info "作成されたペイン数: $PANE_COUNT"
 
-if [ "$PANE_COUNT" -ne 4 ]; then
-    echo "❌ エラー: 期待されるペイン数(4)と異なります: $PANE_COUNT"
+if [ "$PANE_COUNT" -ne 5 ]; then
+    echo "❌ エラー: 期待されるペイン数(5)と異なります: $PANE_COUNT"
     exit 1
 fi
 
@@ -82,9 +83,9 @@ log_info "検出されたペイン: ${PANE_IDS[*]}"
 
 # ペインタイトル設定とセットアップ
 log_info "ペインタイトル設定中..."
-PANE_TITLES=("boss1" "worker1" "worker2" "worker3")
+PANE_TITLES=("ARCHITECT" "TEST_ENGINEER" "BACKEND_DEV" "FRONTEND_DEV" "QA_ENGINEER")
 
-for i in {0..3}; do
+for i in {0..4}; do
     PANE_ID="${PANE_IDS[$i]}"
     TITLE="${PANE_TITLES[$i]}"
     
@@ -97,13 +98,23 @@ for i in {0..3}; do
     tmux send-keys -t "$PANE_ID" "cd $(pwd)" C-m
     
     # カラープロンプト設定
-    if [ $i -eq 0 ]; then
-        # boss1: 赤色
-        tmux send-keys -t "$PANE_ID" "export PS1='(\[\033[1;31m\]${TITLE}\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
-    else
-        # workers: 青色
-        tmux send-keys -t "$PANE_ID" "export PS1='(\[\033[1;34m\]${TITLE}\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
-    fi
+    case $i in
+        0) # ARCHITECT: 紫色
+            tmux send-keys -t "$PANE_ID" "export PS1='(\[\033[1;35m\]${TITLE}\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
+            ;;
+        1) # TEST_ENGINEER: 赤色
+            tmux send-keys -t "$PANE_ID" "export PS1='(\[\033[1;31m\]${TITLE}\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
+            ;;
+        2) # BACKEND_DEV: 青色
+            tmux send-keys -t "$PANE_ID" "export PS1='(\[\033[1;34m\]${TITLE}\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
+            ;;
+        3) # FRONTEND_DEV: シアン色
+            tmux send-keys -t "$PANE_ID" "export PS1='(\[\033[1;36m\]${TITLE}\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
+            ;;
+        4) # QA_ENGINEER: 黄色
+            tmux send-keys -t "$PANE_ID" "export PS1='(\[\033[1;33m\]${TITLE}\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
+            ;;
+    esac
     
     # ウェルカムメッセージ
     tmux send-keys -t "$PANE_ID" "echo '=== ${TITLE} エージェント ==='" C-m
@@ -112,17 +123,17 @@ done
 log_success "✅ multiagentセッション作成完了"
 echo ""
 
-# STEP 3: presidentセッション作成（1ペイン）
-log_info "👑 presidentセッション作成開始..."
+# STEP 3: project_managerセッション作成（1ペイン）
+log_info "👑 project_managerセッション作成開始..."
 
-tmux new-session -d -s president
-tmux send-keys -t president "cd $(pwd)" C-m
-tmux send-keys -t president "export PS1='(\[\033[1;35m\]PRESIDENT\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
-tmux send-keys -t president "echo '=== PRESIDENT セッション ==='" C-m
-tmux send-keys -t president "echo 'プロジェクト統括責任者'" C-m
-tmux send-keys -t president "echo '========================'" C-m
+tmux new-session -d -s project_manager
+tmux send-keys -t project_manager "cd $(pwd)" C-m
+tmux send-keys -t project_manager "export PS1='(\[\033[1;35m\]PROJECT_MANAGER\[\033[0m\]) \[\033[1;32m\]\w\[\033[0m\]\$ '" C-m
+tmux send-keys -t project_manager "echo '=== PROJECT MANAGER セッション ==='" C-m
+tmux send-keys -t project_manager "echo 'Filterie開発プロジェクトマネージャー'" C-m
+tmux send-keys -t project_manager "echo '===================================='" C-m
 
-log_success "✅ presidentセッション作成完了"
+log_success "✅ project_managerセッション作成完了"
 echo ""
 
 # STEP 4: 環境確認・表示
@@ -139,23 +150,23 @@ echo ""
 
 # ペイン構成表示
 echo "📋 ペイン構成:"
-echo "  multiagentセッション（4ペイン）:"
+echo "  multiagentセッション（5ペイン）:"
 tmux list-panes -t "multiagent:agents" -F "    Pane #{pane_id}: #{pane_title}"
 echo ""
-echo "  presidentセッション（1ペイン）:"
-echo "    Pane: PRESIDENT (プロジェクト統括)"
+echo "  project_managerセッション（1ペイン）:"
+echo "    Pane: PROJECT_MANAGER (開発プロジェクト管理)"
 
 echo ""
 log_success "🎉 Demo環境セットアップ完了！"
 echo ""
 echo "📋 次のステップ:"
 echo "  1. 🔗 セッションアタッチ:"
-echo "     tmux attach-session -t multiagent   # マルチエージェント確認"
-echo "     tmux attach-session -t president    # プレジデント確認"
+echo "     tmux attach-session -t multiagent        # 開発エージェント確認"
+echo "     tmux attach-session -t project_manager   # プロジェクトマネージャー確認"
 echo ""
 echo "  2. 🤖 Claude Code起動:"
-echo "     # 手順1: President認証"
-echo "     tmux send-keys -t president 'claude' C-m"
+echo "     # 手順1: Project Manager認証"
+echo "     tmux send-keys -t project_manager 'claude' C-m"
 echo "     # 手順2: 認証後、multiagent一括起動"
 echo "     # 各ペインのIDを使用してclaudeを起動"
 echo "     tmux list-panes -t multiagent:agents -F '#{pane_id}' | while read pane; do"
@@ -163,10 +174,12 @@ echo "         tmux send-keys -t \"\$pane\" 'claude' C-m"
 echo "     done"
 echo ""
 echo "  3. 📜 指示書確認:"
-echo "     PRESIDENT: instructions/president.md"
-echo "     boss1: instructions/boss.md"
-echo "     worker1,2,3: instructions/worker.md"
-echo "     システム構造: CLAUDE.md"
+echo "     ARCHITECT: instructions/architect.md"
+echo "     TEST_ENGINEER: instructions/test_engineer.md"
+echo "     BACKEND_DEV: instructions/backend_dev.md"
+echo "     FRONTEND_DEV: instructions/frontend_dev.md"
+echo "     QA_ENGINEER: instructions/qa_engineer.md"
+echo "     開発システム: DEVELOPMENT_AGENT_SYSTEM.md"
 echo ""
-echo "  4. 🎯 デモ実行: PRESIDENTに「あなたはpresidentです。指示書に従って」と入力"
+echo "  4. 🎯 デモ実行: PROJECT_MANAGERに開発タスクを指示"
 

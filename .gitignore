@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Database
+prisma/migrations/dev/
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# OS files
+Thumbs.db
+
+# Agent communication
+agent_inboxes/
+agent_messages/
+
+# Production
+.vercel
+.netlify

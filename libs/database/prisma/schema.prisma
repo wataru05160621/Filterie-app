@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String            @id @default(cuid())
+  email             String            @unique
+  password          String
+  name              String
+  avatarUrl         String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  subscriptions     Subscription[]
+  readArticles      ReadArticle[]
+  preferences       UserPreference?
+  bookmarks         Bookmark[]
+}
+
+model Source {
+  id                String            @id @default(cuid())
+  name              String
+  url               String            @unique
+  feedUrl           String?
+  tier              Int               // 1-4 based on source reliability
+  category          String            // tech, business, etc.
+  language          String            @default("ja")
+  isActive          Boolean           @default(true)
+  lastFetchedAt     DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  articles          Article[]
+  subscriptions     Subscription[]
+}
+
+model Article {
+  id                String            @id @default(cuid())
+  sourceId          String
+  source            Source            @relation(fields: [sourceId], references: [id])
+  originalUrl       String            @unique
+  title             String
+  content           String?
+  summary           String?
+  aiSummary         String?
+  publishedAt       DateTime
+  fetchedAt         DateTime          @default(now())
+  imageUrl          String?
+  author            String?
+  tags              Tag[]
+  readArticles      ReadArticle[]
+  bookmarks         Bookmark[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([sourceId])
+  @@index([publishedAt])
+}
+
+model Tag {
+  id                String            @id @default(cuid())
+  name              String            @unique
+  articles          Article[]
+  userPreferences   UserPreference[]
+  createdAt         DateTime          @default(now())
+}
+
+model Subscription {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id])
+  sourceId          String
+  source            Source            @relation(fields: [sourceId], references: [id])
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([userId, sourceId])
+}
+
+model ReadArticle {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id])
+  articleId         String
+  article           Article           @relation(fields: [articleId], references: [id])
+  readAt            DateTime          @default(now())
+  readDuration      Int?              // in seconds
+
+  @@unique([userId, articleId])
+}
+
+model UserPreference {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  user              User              @relation(fields: [userId], references: [id])
+  preferredTags     Tag[]
+  minTier           Int               @default(1)
+  maxTier           Int               @default(4)
+  languages         String[]          @default(["ja"])
+  emailDigest       Boolean           @default(false)
+  digestFrequency   String?           // daily, weekly
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model Bookmark {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id])
+  articleId         String
+  article           Article           @relation(fields: [articleId], references: [id])
+  note              String?
+  createdAt         DateTime          @default(now())
+
+  @@unique([userId, articleId])
+}
