@@ -19,6 +19,7 @@ model User {
   readArticles      ReadArticle[]
   preferences       UserPreference?
   bookmarks         Bookmark[]
+  trays             Tray[]
 }
 
 model Source {
@@ -26,15 +27,19 @@ model Source {
   name              String
   url               String            @unique
   feedUrl           String?
-  tier              Int               // 1-4 based on source reliability
+  tier              Int               @default(3) // 1-4 based on source reliability
   category          String            // tech, business, etc.
   language          String            @default("ja")
   isActive          Boolean           @default(true)
   lastFetchedAt     DateTime?
+  lastError         String?
+  lastErrorAt       DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   articles          Article[]
   subscriptions     Subscription[]
+  sourceTier        SourceTier?
+  reliabilityHistory SourceReliabilityHistory[]
 }
 
 model Article {
@@ -53,6 +58,7 @@ model Article {
   tags              Tag[]
   readArticles      ReadArticle[]
   bookmarks         Bookmark[]
+  trayItems         TrayItem[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -110,11 +116,97 @@ model UserPreference {
 model Bookmark {
   id                String            @id @default(cuid())
   userId            String
-  user              User              @relation(fields: [userId], references: [id])
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   articleId         String
-  article           Article           @relation(fields: [articleId], references: [id])
+  article           Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
   note              String?
   createdAt         DateTime          @default(now())
 
   @@unique([userId, articleId])
+}
+
+// Tier判定システム関連のモデル
+model SourceTier {
+  id                 String    @id @default(cuid())
+  sourceId           String    @unique
+  tier               Int
+  confidence         Float
+  verificationStatus String
+  reasoning          Json      @default("[]")
+  verifiedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+model TrustedDomain {
+  id           String   @id @default(cuid())
+  domain       String   @unique
+  organization String
+  tier         Int
+  category     String?
+  verified     Boolean  @default(false)
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model VerifiedAccount {
+  id           String    @id @default(cuid())
+  platform     String
+  accountId    String
+  accountName  String
+  personName   String?
+  title        String?
+  organization String?
+  tier         Int
+  verifiedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([platform, accountId])
+}
+
+model SourceReliabilityHistory {
+  id                    String    @id @default(cuid())
+  sourceId              String
+  accuracyScore         Float?
+  correctionCount       Int       @default(0)
+  falseInfoCount        Int       @default(0)
+  evaluationPeriodStart DateTime?
+  evaluationPeriodEnd   DateTime?
+  createdAt             DateTime  @default(now())
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+// Tray（保存ボード）システム
+model Tray {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  isPublic    Boolean    @default(false)
+  items       TrayItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([isPublic])
+}
+
+model TrayItem {
+  id        String   @id @default(cuid())
+  trayId    String
+  tray      Tray     @relation(fields: [trayId], references: [id], onDelete: Cascade)
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  note      String?
+  addedAt   DateTime @default(now())
+
+  @@unique([trayId, articleId])
+  @@index([trayId])
+  @@index([articleId])
 }

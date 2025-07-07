@@ -1,0 +1,41 @@
+query EvaluateSourceTier($url: String!) {
+  evaluateSourceTier(url: $url) {
+    url
+    tier {
+      tier
+      confidence
+      verificationStatus
+      reasoning
+    }
+  }
+}
+
+mutation UpdateSourceTier($sourceId: String!, $tier: Int!, $reasoning: String!) {
+  updateSourceTier(sourceId: $sourceId, tier: $tier, reasoning: $reasoning) {
+    id
+    name
+    url
+    tier
+  }
+}
+
+query TierStats {
+  tierStats {
+    tierCounts {
+      tier
+      count
+    }
+    verifiedSourceCount
+    totalSourceCount
+  }
+}
+
+fragment TierBadgeInfo on Source {
+  tierBadge {
+    tier
+    label
+    color
+    icon
+    description
+  }
+}

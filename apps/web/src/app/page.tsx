@@ -36,7 +36,7 @@ export default function Home() {
           </p>
           <div className="flex gap-4 justify-center">
             <Link
-              href="/auth/register"
+              href="/register"
               className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
             >
               今すぐ始める

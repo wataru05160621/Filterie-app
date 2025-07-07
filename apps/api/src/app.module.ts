@@ -14,6 +14,8 @@ import { FeedModule } from './modules/feed/feed.module';
 import { AiModule } from './modules/ai/ai.module';
 import { PreferencesModule } from './modules/preferences/preferences.module';
 import { PubSubModule } from './modules/pubsub/pubsub.module';
+import { TierModule } from './modules/tier/tier.module';
+import { TraysModule } from './modules/trays/trays.module';
 
 @Module({
   imports: [
@@ -77,6 +79,8 @@ import { PubSubModule } from './modules/pubsub/pubsub.module';
     FeedModule,
     AiModule,
     PreferencesModule,
+    TierModule,
+    TraysModule,
   ],
   controllers: [],
   providers: [],

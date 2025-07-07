@@ -1,6 +1,6 @@
-import { InputType, Field, PartialType } from '@nestjs/graphql';
+import { InputType, Field, PartialType, Int } from '@nestjs/graphql';
 import { CreateSourceInput } from './create-source.input';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsOptional, IsInt, Min, Max } from 'class-validator';
 
 @InputType()
 export class UpdateSourceInput extends PartialType(CreateSourceInput) {
@@ -8,4 +8,11 @@ export class UpdateSourceInput extends PartialType(CreateSourceInput) {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(4)
+  tier?: number;
 }
