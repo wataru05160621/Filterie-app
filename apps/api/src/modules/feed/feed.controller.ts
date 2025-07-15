@@ -12,11 +12,11 @@ export class FeedController {
   @Public()
   @Get('websub/:sourceId')
   async verifyWebSub(
-    @Param('sourceId') sourceId: string,
+    @Param('sourceId') _sourceId: string,
     @Query('hub.mode') mode: string,
     @Query('hub.topic') topic: string,
     @Query('hub.challenge') challenge: string,
-    @Query('hub.lease_seconds') leaseSeconds?: string,
+    @Query('hub.lease_seconds') _leaseSeconds?: string,
   ) {
     this.logger.log(`WebSub verification request: mode=${mode}, topic=${topic}`);
 

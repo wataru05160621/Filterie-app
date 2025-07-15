@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import Link from 'next/link';
-import { Header } from '@/components/layout/header';
 
 const ARTICLES_QUERY = gql`
   query GetArticles($filter: ArticleFilterInput, $pagination: PaginationInput) {
@@ -74,14 +73,12 @@ export default function ArticlesPage() {
   };
 
   return (
-    <>
-      <Header />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-8">
+      <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">記事一覧</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold text-white">記事一覧</h1>
+            <p className="mt-2 text-gray-400">
               信頼できる情報源からの最新記事
             </p>
           </div>
@@ -95,12 +92,12 @@ export default function ArticlesPage() {
                 placeholder="記事を検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-4 py-2 bg-gray-900 border border-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
               />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 bg-gray-900 border border-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="publishedAt">公開日順</option>
                 <option value="createdAt">追加日順</option>
@@ -110,14 +107,14 @@ export default function ArticlesPage() {
 
             {/* Tier Filter */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Tier:</span>
+              <span className="text-sm font-medium text-gray-400">Tier:</span>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setSelectedTier(null)}
                   className={`px-3 py-1 rounded-full text-sm font-medium ${
                     selectedTier === null
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                   }`}
                 >
                   すべて
@@ -129,7 +126,7 @@ export default function ArticlesPage() {
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       selectedTier === tier
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
                     Tier {tier}
@@ -140,20 +137,20 @@ export default function ArticlesPage() {
           </div>
 
           {/* Articles List */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-gray-900 rounded-lg border border-gray-800">
             {loading && !data ? (
-              <div className="p-8 text-center text-gray-500">読み込み中...</div>
+              <div className="p-8 text-center text-gray-400">読み込み中...</div>
             ) : error ? (
-              <div className="p-8 text-center text-red-600">
+              <div className="p-8 text-center text-red-500">
                 エラーが発生しました: {error.message}
               </div>
             ) : data?.articles?.edges?.length > 0 ? (
               <>
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-gray-800">
                   {data.articles.edges.map(({ node }: any) => (
                     <article
                       key={node.id}
-                      className="p-6 hover:bg-gray-50"
+                      className="p-6 hover:bg-gray-800/50 transition-colors"
                       data-testid="article-card"
                     >
                       <div className="flex items-start space-x-4">
@@ -181,7 +178,7 @@ export default function ArticlesPage() {
                               >
                                 Tier {node.source.tier}
                               </span>
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-gray-400">
                                 {node.source.name}
                               </span>
                               {node.readArticles?.length > 0 && (
@@ -194,7 +191,7 @@ export default function ArticlesPage() {
                               )}
                             </div>
                             <button
-                              className={`p-2 rounded-lg hover:bg-gray-100 ${
+                              className={`p-2 rounded-lg hover:bg-gray-800 transition-colors ${
                                 node.bookmarks?.length > 0
                                   ? 'text-yellow-600'
                                   : 'text-gray-400'
@@ -220,19 +217,19 @@ export default function ArticlesPage() {
 
                           <Link href={`/articles/${node.id}`} className="block group">
                             <h2
-                              className="text-lg font-medium text-gray-900 group-hover:text-blue-600"
+                              className="text-lg font-medium text-white group-hover:text-blue-400 transition-colors"
                               data-testid="article-title"
                             >
                               {node.title}
                             </h2>
-                            <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                            <p className="mt-1 text-sm text-gray-400 line-clamp-2">
                               {node.summary}
                             </p>
                           </Link>
 
                           <div className="mt-3 flex items-center justify-between">
                             <div className="flex items-center space-x-4">
-                              <time className="text-sm text-gray-500">
+                              <time className="text-sm text-gray-400">
                                 {new Date(node.publishedAt).toLocaleDateString('ja-JP', {
                                   year: 'numeric',
                                   month: 'long',
@@ -244,7 +241,7 @@ export default function ArticlesPage() {
                                   {node.tags.slice(0, 3).map((tag: any) => (
                                     <span
                                       key={tag.id}
-                                      className="text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
+                                      className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors"
                                     >
                                       #{tag.name}
                                     </span>
@@ -266,7 +263,7 @@ export default function ArticlesPage() {
 
                 {/* Load More */}
                 {data.articles.pageInfo.hasNextPage && (
-                  <div className="p-4 text-center border-t">
+                  <div className="p-4 text-center border-t border-gray-800">
                     <button
                       onClick={handleLoadMore}
                       disabled={loading}
@@ -278,7 +275,7 @@ export default function ArticlesPage() {
                 )}
               </>
             ) : (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-gray-400">
                 記事が見つかりませんでした
               </div>
             )}
@@ -286,12 +283,11 @@ export default function ArticlesPage() {
 
           {/* Total Count */}
           {data?.articles?.totalCount > 0 && (
-            <p className="mt-4 text-sm text-gray-600 text-center">
+            <p className="mt-4 text-sm text-gray-400 text-center">
               全 {data.articles.totalCount} 件の記事
             </p>
           )}
         </div>
       </div>
-    </>
   );
 }

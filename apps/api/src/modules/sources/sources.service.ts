@@ -114,6 +114,31 @@ export class SourcesService {
     return true;
   }
 
+  async findById(id: string) {
+    return this.findOne(id);
+  }
+
+  async updateLastFetched(id: string) {
+    return this.prisma.source.update({
+      where: { id },
+      data: {
+        lastFetchedAt: new Date(),
+        lastError: null,
+        lastErrorAt: null,
+      },
+    });
+  }
+
+  async updateLastError(id: string, error: string) {
+    return this.prisma.source.update({
+      where: { id },
+      data: {
+        lastError: error,
+        lastErrorAt: new Date(),
+      },
+    });
+  }
+
   async evaluateTier(url: string): Promise<TierEvaluation> {
     try {
       const domain = new URL(url).hostname.toLowerCase();

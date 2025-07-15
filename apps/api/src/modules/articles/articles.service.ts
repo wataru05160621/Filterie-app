@@ -227,6 +227,16 @@ export class ArticlesService {
     });
   }
 
+  async findByOriginalUrl(url: string) {
+    return this.prisma.article.findUnique({
+      where: { originalUrl: url },
+      include: {
+        source: true,
+        tags: true,
+      },
+    });
+  }
+
   private buildWhereClause(filter?: ArticleFilterInput, userId?: string): Prisma.ArticleWhereInput {
     if (!filter) return {};
 

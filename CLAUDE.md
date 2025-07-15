@@ -220,3 +220,22 @@ pnpm build
 - メッセージ送信時は必ず./agent-send.shを使用する
 - 完了ファイルは./tmp/ディレクトリに作成する
 - ログは./logs/send_log.txtに記録される
+
+## プロジェクトドキュメント
+
+主要なドキュメントは[/docs](./docs)ディレクトリに格納されています：
+
+- [ドキュメント一覧](./docs/DOCUMENTS_INDEX.md) - 全ドキュメントの索引と概要
+- [要件定義書](./docs/filterie_requirements_v0.2.md) - 機能要件・非機能要件
+- [基本設計書](./docs/basic_design.md) - システム構成・画面設計
+- [詳細設計書](./docs/detailed_design.md) - API仕様・処理フロー
+- [情報源Tier設計](./docs/source_tier_design.md) - Tier分類基準と評価アルゴリズム
+
+### UIプロトタイプ
+
+[/demo/ui_samples](./demo/ui_samples)に実装済みのHTMLプロトタイプ：
+- **filterie_dashboard.html** - ダッシュボード（統計、AI厳選記事）
+- **article_detail_ai.html** - AI要約機能付き記事詳細
+- **source_management.html** - 情報源管理（Tier評価、一括操作）
+- **ai_settings.html** - AI設定ページ
+- **saved_articles.html** - 保存済み記事管理

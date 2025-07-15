@@ -178,6 +178,24 @@ pnpm --filter web test:e2e:debug
 4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
 5. Pull Requestを作成
 
+## ドキュメント
+
+プロジェクトの詳細なドキュメントは[/docs](./docs)ディレクトリに格納されています。
+
+- [ドキュメント一覧](./docs/DOCUMENTS_INDEX.md) - 全ドキュメントの索引
+- [要件定義書](./docs/filterie_requirements_v0.2.md)
+- [基本設計書](./docs/basic_design.md)
+- [詳細設計書](./docs/detailed_design.md)
+- [情報源Tier設計](./docs/source_tier_design.md)
+- [フロントエンド実装ガイド](./docs/FRONTEND_IMPLEMENTATION.md)
+- [環境変数チェックリスト](./docs/environment-variables-checklist.md)
+
+### UIデザインサンプル
+
+[/demo/ui_samples](./demo/ui_samples)にHTMLプロトタイプがあります：
+- Filterie特化ページ（ダッシュボード、AI要約、情報源管理等）
+- モダンデザインサンプル（Feedly風、カードビュー等）
+
 ## ライセンス
 
 MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照してください。

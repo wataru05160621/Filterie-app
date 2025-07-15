@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI設定 - Filterie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1a1a1a;
+            --bg-hover: #252525;
+            --bg-selected: #303030;
+            --bg-ai: #1a2332;
+            --bg-gradient: linear-gradient(135deg, #1a2332, #1a1a1a);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #707070;
+            --accent-primary: #00dc82;
+            --accent-secondary: #00a865;
+            --accent-info: #3b82f6;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-purple: #8b5cf6;
+            --border-color: #2a2a2a;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Sidebar (reuse) */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-section {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-section {
+            flex: 1;
+            padding: 16px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 15px;
+            gap: 12px;
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .nav-item.active {
+            background-color: var(--bg-selected);
+            color: var(--accent-primary);
+        }
+        
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--accent-primary);
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background-color: var(--bg-primary);
+        }
+        
+        /* Header */
+        .header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 24px 32px;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .page-description {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+        
+        /* Settings Container */
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 32px;
+        }
+        
+        /* Settings Nav */
+        .settings-nav {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px 0;
+            height: fit-content;
+            border: 1px solid var(--border-color);
+        }
+        
+        .settings-nav-item {
+            display: block;
+            padding: 12px 24px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .settings-nav-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .settings-nav-item.active {
+            color: var(--accent-info);
+            background-color: var(--bg-selected);
+        }
+        
+        .settings-nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--accent-info);
+        }
+        
+        /* Settings Content */
+        .settings-content {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .settings-section {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background-color: var(--accent-info);
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .section-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        /* Form Elements */
+        .setting-item {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .setting-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .label-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .label-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            background-color: var(--accent-info);
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .setting-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background-color: var(--bg-tertiary);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: 1px solid var(--border-color);
+        }
+        
+        .toggle-switch.active {
+            background-color: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(22px);
+        }
+        
+        /* Slider */
+        .slider-container {
+            margin-top: 12px;
+        }
+        
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            background-color: var(--bg-tertiary);
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .slider-fill {
+            height: 100%;
+            background-color: var(--accent-info);
+            border-radius: 3px;
+            width: 60%;
+            position: relative;
+        }
+        
+        .slider-thumb {
+            position: absolute;
+            top: 50%;
+            right: -8px;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            cursor: grab;
+        }
+        
+        /* Select */
+        .select-container {
+            margin-top: 12px;
+        }
+        
+        .select {
+            width: 100%;
+            padding: 10px 16px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .select:hover {
+            border-color: var(--accent-info);
+        }
+        
+        .select:focus {
+            outline: none;
+            border-color: var(--accent-info);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Usage Stats */
+        .usage-card {
+            background: var(--bg-gradient);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .usage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .usage-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .usage-period {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .usage-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .usage-stat {
+            text-align: center;
+        }
+        
+        .usage-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-info);
+        }
+        
+        .usage-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .usage-bar {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .usage-bar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .usage-progress {
+            width: 100%;
+            height: 8px;
+            background-color: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .usage-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-info), var(--accent-purple));
+            width: 75%;
+            border-radius: 4px;
+        }
+        
+        /* Custom Prompt */
+        .prompt-editor {
+            margin-top: 12px;
+        }
+        
+        .prompt-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px 16px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+        
+        .prompt-textarea:focus {
+            outline: none;
+            border-color: var(--accent-info);
+            background-color: var(--bg-hover);
+        }
+        
+        .prompt-variables {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .variable-chip {
+            padding: 4px 12px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .variable-chip:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--accent-info);
+            color: var(--accent-info);
+        }
+        
+        /* Save Button */
+        .save-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo-section">
+            <div class="logo">
+                <div class="logo-icon">F</div>
+                <span>Filterie</span>
+            </div>
+        </div>
+        
+        <nav class="nav-section">
+            <a href="filterie_dashboard.html" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>ダッシュボード</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📰</span>
+                <span>最新記事</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔥</span>
+                <span>トレンド</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🤖</span>
+                <span>AI推薦</span>
+            </a>
+            <a href="source_management.html" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span>情報源管理</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔖</span>
+                <span>保存済み</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">⚙️</span>
+                <span>設定</span>
+            </a>
+        </nav>
+    </aside>
+    
+    <main class="main-content">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="page-title">AI設定</h1>
+                <p class="page-description">FilterieのAI機能をカスタマイズして、あなたに最適な情報体験を作りましょう</p>
+            </div>
+        </header>
+        
+        <div class="settings-container">
+            <nav class="settings-nav">
+                <a href="#" class="settings-nav-item active">基本設定</a>
+                <a href="#" class="settings-nav-item">要約設定</a>
+                <a href="#" class="settings-nav-item">フィルタリング</a>
+                <a href="#" class="settings-nav-item">推薦アルゴリズム</a>
+                <a href="#" class="settings-nav-item">プライバシー</a>
+                <a href="#" class="settings-nav-item">詳細設定</a>
+                <a href="#" class="settings-nav-item">API使用状況</a>
+            </nav>
+            
+            <div class="settings-content">
+                <!-- Usage Stats -->
+                <div class="usage-card">
+                    <div class="usage-header">
+                        <h3 class="usage-title">今月のAI使用状況</h3>
+                        <span class="usage-period">2024年3月1日 - 3月15日</span>
+                    </div>
+                    <div class="usage-stats">
+                        <div class="usage-stat">
+                            <div class="usage-value">1,234</div>
+                            <div class="usage-label">要約生成数</div>
+                        </div>
+                        <div class="usage-stat">
+                            <div class="usage-value">5,678</div>
+                            <div class="usage-label">記事分析数</div>
+                        </div>
+                        <div class="usage-stat">
+                            <div class="usage-value">892</div>
+                            <div class="usage-label">タグ生成数</div>
+                        </div>
+                    </div>
+                    <div class="usage-bar">
+                        <div class="usage-bar-header">
+                            <span>月間利用量</span>
+                            <span>7,500 / 10,000 (75%)</span>
+                        </div>
+                        <div class="usage-progress">
+                            <div class="usage-progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Basic Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">
+                                <span class="section-icon">🤖</span>
+                                <span>基本設定</span>
+                            </h2>
+                            <p class="section-description">AIの基本的な動作を設定します</p>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">AI機能を有効化</span>
+                            <div class="toggle-switch active"></div>
+                        </div>
+                        <p class="setting-description">すべてのAI機能のオン/オフを切り替えます</p>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">自動要約生成</span>
+                            <div class="toggle-switch active"></div>
+                        </div>
+                        <p class="setting-description">新しい記事に対して自動的にAI要約を生成します</p>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">処理速度の優先度</span>
+                        </div>
+                        <p class="setting-description">速度と精度のバランスを調整します</p>
+                        <div class="slider-container">
+                            <div class="slider-header">
+                                <span>速度優先</span>
+                                <span>バランス</span>
+                                <span>精度優先</span>
+                            </div>
+                            <div class="slider">
+                                <div class="slider-fill">
+                                    <div class="slider-thumb"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">AIモデル</span>
+                            <span class="label-badge">PRO</span>
+                        </div>
+                        <p class="setting-description">使用するAIモデルを選択します</p>
+                        <div class="select-container">
+                            <select class="select">
+                                <option>GPT-4 Turbo (推奨)</option>
+                                <option>GPT-3.5 Turbo (高速)</option>
+                                <option>Claude 3 Opus (高精度)</option>
+                                <option>Gemini Pro (バランス)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary Settings -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">
+                                <span class="section-icon">📝</span>
+                                <span>要約設定</span>
+                            </h2>
+                            <p class="section-description">AI要約の生成方法をカスタマイズします</p>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">要約の長さ</span>
+                        </div>
+                        <p class="setting-description">生成される要約の詳細度を設定します</p>
+                        <div class="select-container">
+                            <select class="select">
+                                <option>短い (3つのポイント)</option>
+                                <option selected>標準 (5つのポイント)</option>
+                                <option>詳細 (7つのポイント)</option>
+                                <option>カスタム</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">要約スタイル</span>
+                        </div>
+                        <p class="setting-description">要約の文体を選択します</p>
+                        <div class="select-container">
+                            <select class="select">
+                                <option>ビジネス向け（フォーマル）</option>
+                                <option selected>標準（バランス）</option>
+                                <option>カジュアル（親しみやすい）</option>
+                                <option>技術的（専門用語を含む）</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">キーワード抽出</span>
+                            <div class="toggle-switch active"></div>
+                        </div>
+                        <p class="setting-description">記事から重要なキーワードを自動抽出します</p>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">感情分析</span>
+                            <div class="toggle-switch"></div>
+                        </div>
+                        <p class="setting-description">記事のトーンや感情を分析して表示します</p>
+                    </div>
+                </div>
+                
+                <!-- Custom Prompts -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 class="section-title">
+                                <span class="section-icon">✏️</span>
+                                <span>カスタムプロンプト</span>
+                                <span class="label-badge">ADVANCED</span>
+                            </h2>
+                            <p class="section-description">AI要約生成のプロンプトをカスタマイズします</p>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span class="label-text">要約生成プロンプト</span>
+                        </div>
+                        <p class="setting-description">以下の変数が使用できます</p>
+                        <div class="prompt-editor">
+                            <textarea class="prompt-textarea">以下の記事を読んで、最も重要な{POINT_COUNT}つのポイントを{STYLE}な文体で要約してください。
+
+記事タイトル: {TITLE}
+記事本文: {CONTENT}
+
+要約は以下の形式で出力してください：
+1. [ポイント1]
+2. [ポイント2]
+3. [ポイント3]</textarea>
+                            <div class="prompt-variables">
+                                <span class="variable-chip">{TITLE}</span>
+                                <span class="variable-chip">{CONTENT}</span>
+                                <span class="variable-chip">{POINT_COUNT}</span>
+                                <span class="variable-chip">{STYLE}</span>
+                                <span class="variable-chip">{LANGUAGE}</span>
+                                <span class="variable-chip">{CATEGORY}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Section -->
+                <div class="save-section">
+                    <button class="btn btn-secondary">
+                        <span>↺</span>
+                        <span>リセット</span>
+                    </button>
+                    <button class="btn btn-primary">
+                        <span>✓</span>
+                        <span>変更を保存</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

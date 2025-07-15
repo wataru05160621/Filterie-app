@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filterie - Discover Sources</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #242424;
+            --bg-hover: #2a2a2a;
+            --bg-selected: #333333;
+            --text-primary: #ffffff;
+            --text-secondary: #b8b8b8;
+            --text-tertiary: #808080;
+            --accent-green: #2cae58;
+            --accent-blue: #5896ff;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f97316;
+            --accent-pink: #ec4899;
+            --border-subtle: #2a2a2a;
+            --tier-gold: #ffd700;
+            --tier-silver: #c0c0c0;
+            --tier-bronze: #cd7f32;
+            --tier-basic: #808080;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        /* Sidebar (reuse from previous) */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-subtle);
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .logo-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .upgrade-btn {
+            padding: 6px 16px;
+            background-color: var(--accent-blue);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .nav-section {
+            padding: 16px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 15px;
+            gap: 12px;
+        }
+        
+        .nav-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .nav-item.active {
+            background-color: var(--bg-hover);
+            color: var(--accent-green);
+            border-left: 3px solid var(--accent-green);
+            padding-left: 17px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background-color: var(--bg-primary);
+        }
+        
+        .page-header {
+            padding: 32px 40px 24px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .page-title {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        /* Source Type Tabs */
+        .source-tabs {
+            display: flex;
+            gap: 32px;
+            padding: 0 40px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .source-tab {
+            padding: 16px 0;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .source-tab:hover {
+            color: var(--text-primary);
+        }
+        
+        .source-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent-green);
+        }
+        
+        .tab-icon {
+            font-size: 20px;
+        }
+        
+        /* Search Section */
+        .search-section {
+            padding: 32px 40px;
+            background-color: var(--bg-secondary);
+        }
+        
+        .search-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 24px 16px 56px;
+            background-color: var(--bg-tertiary);
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px;
+            font-size: 16px;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-green);
+            background-color: var(--bg-hover);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+        }
+        
+        .language-selector {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 8px 16px;
+            background-color: var(--bg-hover);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* Category Grid */
+        .explore-section {
+            padding: 40px;
+        }
+        
+        .section-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+        
+        .category-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-green);
+            box-shadow: 0 8px 24px rgba(44, 174, 88, 0.2);
+        }
+        
+        .category-emoji {
+            font-size: 36px;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .category-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .category-count {
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        
+        .category-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .category-card:hover .category-gradient {
+            opacity: 1;
+        }
+        
+        .gradient-tech { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+        .gradient-news { background: linear-gradient(90deg, var(--accent-orange), #ef4444); }
+        .gradient-business { background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); }
+        .gradient-entertainment { background: linear-gradient(90deg, var(--accent-pink), var(--accent-orange)); }
+        
+        /* Source List */
+        .source-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        
+        .source-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .source-card:hover {
+            border-color: var(--accent-green);
+            background-color: var(--bg-tertiary);
+        }
+        
+        .source-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background-color: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .source-info {
+            flex: 1;
+        }
+        
+        .source-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tier-badge {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        
+        .tier-1 {
+            background-color: rgba(255, 215, 0, 0.1);
+            color: var(--tier-gold);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .tier-2 {
+            background-color: rgba(192, 192, 192, 0.1);
+            color: var(--tier-silver);
+            border: 1px solid rgba(192, 192, 192, 0.3);
+        }
+        
+        .source-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        .follow-btn {
+            padding: 8px 20px;
+            background-color: transparent;
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .follow-btn:hover {
+            background-color: var(--accent-green);
+            color: white;
+        }
+        
+        .follow-btn.following {
+            background-color: var(--accent-green);
+            color: white;
+        }
+        
+        /* Featured Sources */
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+        
+        .featured-card {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .featured-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .featured-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background-color: var(--accent-green);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .featured-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            background-color: var(--bg-hover);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+        
+        .featured-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .featured-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .category-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo-section">
+            <div class="logo">
+                <div class="logo-icon">F</div>
+                <span>Filterie</span>
+            </div>
+            <button class="upgrade-btn">Upgrade</button>
+        </div>
+        
+        <nav class="nav-section">
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📅</span>
+                <span>Today</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">📑</span>
+                <span>Follow Sources</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🤖</span>
+                <span>Create AI Feed</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔍</span>
+                <span>Search</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📚</span>
+                <span>Read Later</span>
+            </a>
+        </nav>
+    </aside>
+    
+    <main class="main-content">
+        <header class="page-header">
+            <h1 class="page-title">Follow Sources</h1>
+        </header>
+        
+        <nav class="source-tabs">
+            <div class="source-tab active">
+                <span class="tab-icon">🌐</span>
+                <span>Websites</span>
+            </div>
+            <div class="source-tab">
+                <span class="tab-icon">📱</span>
+                <span>Reddit</span>
+            </div>
+            <div class="source-tab">
+                <span class="tab-icon">📰</span>
+                <span>Newsletters</span>
+            </div>
+            <div class="source-tab">
+                <span class="tab-icon">🔍</span>
+                <span>Google News</span>
+            </div>
+        </nav>
+        
+        <div class="search-section">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search by topic, website, or RSS link">
+                <select class="language-selector">
+                    <option>Japanese</option>
+                    <option>English</option>
+                    <option>All Languages</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="explore-section">
+            <h2 class="section-header">Explore</h2>
+            
+            <div class="category-grid">
+                <div class="category-card">
+                    <div class="category-gradient gradient-tech"></div>
+                    <span class="category-emoji">💻</span>
+                    <div class="category-name">#technology</div>
+                    <div class="category-count">タグ「テクノロジー」を検索</div>
+                </div>
+                
+                <div class="category-card">
+                    <div class="category-gradient gradient-news"></div>
+                    <span class="category-emoji">📰</span>
+                    <div class="category-name">#news</div>
+                    <div class="category-count">朝日新聞</div>
+                </div>
+                
+                <div class="category-card">
+                    <div class="category-gradient gradient-business"></div>
+                    <span class="category-emoji">💼</span>
+                    <div class="category-name">#business</div>
+                    <div class="category-count">PRESIDENT Online</div>
+                </div>
+                
+                <div class="category-card">
+                    <div class="category-gradient gradient-entertainment"></div>
+                    <span class="category-emoji">🎮</span>
+                    <div class="category-name">#game</div>
+                    <div class="category-count">Game*Spark</div>
+                </div>
+                
+                <div class="category-card">
+                    <div class="category-gradient gradient-tech"></div>
+                    <span class="category-emoji">📷</span>
+                    <div class="category-name">#camera</div>
+                    <div class="category-count">デジカメ Watch</div>
+                </div>
+                
+                <div class="category-card">
+                    <div class="category-gradient gradient-business"></div>
+                    <span class="category-emoji">💰</span>
+                    <div class="category-name">#finance</div>
+                    <div class="category-count">つくおき | 作り置き</div>
+                </div>
+                
+                <div class="category-card">
+                    <div class="category-gradient gradient-entertainment"></div>
+                    <span class="category-emoji">🎬</span>
+                    <div class="category-name">#movie</div>
+                    <div class="category-count">映画.com</div>
+                </div>
+                
+                <div class="category-card">
+                    <div class="category-gradient gradient-news"></div>
+                    <span class="category-emoji">✈️</span>
+                    <div class="category-name">#travel</div>
+                    <div class="category-count">トラベル Watch</div>
+                </div>
+            </div>
+            
+            <h2 class="section-header">Featured Sources</h2>
+            
+            <div class="featured-grid">
+                <div class="featured-card">
+                    <span class="featured-badge">おすすめ</span>
+                    <div class="featured-icon">🔬</div>
+                    <div class="featured-name">Nature Japan</div>
+                    <span class="tier-badge tier-1">⭐ Tier 1</span>
+                    <p class="source-description" style="margin-top: 12px;">世界最高峰の科学誌。最新の研究成果と科学ニュースを日本語で配信</p>
+                    <div class="featured-stats">
+                        <span>📊 毎日更新</span>
+                        <span>👥 125K followers</span>
+                    </div>
+                </div>
+                
+                <div class="featured-card">
+                    <span class="featured-badge">トレンド</span>
+                    <div class="featured-icon">🤖</div>
+                    <div class="featured-name">AI News Weekly</div>
+                    <span class="tier-badge tier-2">⭐ Tier 2</span>
+                    <p class="source-description" style="margin-top: 12px;">AI・機械学習の最新動向を週次でまとめて配信。業界のトレンドを把握</p>
+                    <div class="featured-stats">
+                        <span>📊 週刊</span>
+                        <span>👥 89K followers</span>
+                    </div>
+                </div>
+                
+                <div class="featured-card">
+                    <span class="featured-badge">新着</span>
+                    <div class="featured-icon">📈</div>
+                    <div class="featured-name">日経ビジネス</div>
+                    <span class="tier-badge tier-1">⭐ Tier 1</span>
+                    <p class="source-description" style="margin-top: 12px;">ビジネスパーソン必読。経営・経済の深層に迫る分析記事</p>
+                    <div class="featured-stats">
+                        <span>📊 毎日更新</span>
+                        <span>👥 234K followers</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h2 class="section-header">Popular in Technology</h2>
+            
+            <div class="source-list">
+                <div class="source-card">
+                    <div class="source-logo">🍎</div>
+                    <div class="source-info">
+                        <div class="source-name">
+                            Apple Developer News
+                            <span class="tier-badge tier-1">⭐ Tier 1</span>
+                        </div>
+                        <p class="source-description">iOS、macOS、watchOSの最新開発情報とベストプラクティス</p>
+                    </div>
+                    <button class="follow-btn">Follow</button>
+                </div>
+                
+                <div class="source-card">
+                    <div class="source-logo">🔷</div>
+                    <div class="source-info">
+                        <div class="source-name">
+                            Google Developers Blog
+                            <span class="tier-badge tier-1">⭐ Tier 1</span>
+                        </div>
+                        <p class="source-description">Google製品・サービスの開発者向け最新情報とチュートリアル</p>
+                    </div>
+                    <button class="follow-btn">Follow</button>
+                </div>
+                
+                <div class="source-card">
+                    <div class="source-logo">📡</div>
+                    <div class="source-info">
+                        <div class="source-name">
+                            TechCrunch Japan
+                            <span class="tier-badge tier-2">⭐ Tier 2</span>
+                        </div>
+                        <p class="source-description">スタートアップとテクノロジーの最新ニュース</p>
+                    </div>
+                    <button class="follow-btn following">Following</button>
+                </div>
+                
+                <div class="source-card">
+                    <div class="source-logo">🚀</div>
+                    <div class="source-info">
+                        <div class="source-name">
+                            Hacker News
+                            <span class="tier-badge tier-2">⭐ Tier 2</span>
+                        </div>
+                        <p class="source-description">Y Combinatorが運営する技術者向けニュースアグリゲーター</p>
+                    </div>
+                    <button class="follow-btn">Follow</button>
+                </div>
+                
+                <div class="source-card">
+                    <div class="source-logo">🛠️</div>
+                    <div class="source-info">
+                        <div class="source-name">
+                            GitHub Blog
+                            <span class="tier-badge tier-1">⭐ Tier 1</span>
+                        </div>
+                        <p class="source-description">GitHubの新機能、アップデート、開発者向けのベストプラクティス</p>
+                    </div>
+                    <button class="follow-btn">Follow</button>
+                </div>
+                
+                <div class="source-card">
+                    <div class="source-logo">⚛️</div>
+                    <div class="source-info">
+                        <div class="source-name">
+                            React Blog
+                            <span class="tier-badge tier-1">⭐ Tier 1</span>
+                        </div>
+                        <p class="source-description">React公式ブログ。新機能、アップデート、ベストプラクティス</p>
+                    </div>
+                    <button class="follow-btn">Follow</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

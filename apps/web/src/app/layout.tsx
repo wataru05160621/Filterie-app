@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ApolloProviderWrapper } from "@/providers/apollo-provider";
 import { AuthProvider } from "@/providers/auth-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,15 +26,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ApolloProviderWrapper>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ApolloProviderWrapper>
+        <ThemeProvider>
+          <ApolloProviderWrapper>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ApolloProviderWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

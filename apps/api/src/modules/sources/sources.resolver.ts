@@ -6,9 +6,8 @@ import { Source, TierEvaluation } from './entities/source.entity';
 import { CreateSourceInput } from './dto/create-source.input';
 import { UpdateSourceInput } from './dto/update-source.input';
 import { SourceFilterInput } from './dto/source-filter.input';
-import { PaginationInput } from './dto/pagination.input';
+import { PaginationInput } from '../common/dto/pagination.input';
 import { SourceConnection } from './dto/source-connection';
-import { PubSubEngine } from 'graphql-subscriptions';
 import { PUB_SUB } from '../pubsub/pubsub.module';
 import { SubscriptionEvent } from '../pubsub/subscription-events';
 import { SourceFeedFetchedPayload } from '../pubsub/dto/source-feed-fetched.object';
@@ -18,7 +17,7 @@ import { SourceFeedFetchedPayload } from '../pubsub/dto/source-feed-fetched.obje
 export class SourcesResolver {
   constructor(
     private readonly sourcesService: SourcesService,
-    @Inject(PUB_SUB) private pubSub: PubSubEngine,
+    @Inject(PUB_SUB) private pubSub: any,
   ) {}
 
   @Mutation(() => Source)

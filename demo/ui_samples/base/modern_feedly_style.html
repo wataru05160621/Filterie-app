@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filterie - Modern Feed Reader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2a2a2a;
+            --bg-hover: #333333;
+            --text-primary: #ffffff;
+            --text-secondary: #a8a8a8;
+            --text-tertiary: #6b6b6b;
+            --accent-green: #2cae58;
+            --accent-blue: #5896ff;
+            --accent-yellow: #f5a623;
+            --border-subtle: #333333;
+            --tier-1: #ffd700;
+            --tier-2: #c0c0c0;
+            --tier-3: #cd7f32;
+            --tier-4: #808080;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-subtle);
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .logo-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .upgrade-btn {
+            padding: 6px 16px;
+            background-color: var(--accent-blue);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .upgrade-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .nav-section {
+            padding: 16px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 15px;
+            gap: 12px;
+        }
+        
+        .nav-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .nav-item.active {
+            background-color: var(--bg-hover);
+            color: var(--accent-green);
+            border-left: 3px solid var(--accent-green);
+            padding-left: 17px;
+        }
+        
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feeds-section {
+            padding: 20px;
+            border-top: 1px solid var(--border-subtle);
+        }
+        
+        .feeds-header {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        
+        .create-folder-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-green);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 16px;
+        }
+        
+        .create-folder-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background-color: var(--bg-primary);
+        }
+        
+        .content-header {
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--bg-secondary);
+        }
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 600;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-top: 4px;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+            background-color: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .view-btn {
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .view-btn.active {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            padding: 0 40px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .tab-item {
+            padding: 16px 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .tab-item:hover {
+            color: var(--text-primary);
+        }
+        
+        .tab-item.active {
+            color: var(--accent-green);
+            border-bottom-color: var(--accent-green);
+        }
+        
+        /* Article Grid */
+        .articles-container {
+            padding: 40px;
+        }
+        
+        .trending-section {
+            margin-bottom: 48px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        
+        .article-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .article-card {
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid var(--border-subtle);
+        }
+        
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-green);
+        }
+        
+        .article-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #333, #444);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .article-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .tier-indicator {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .tier-1 { color: var(--tier-1); }
+        .tier-2 { color: var(--tier-2); }
+        .tier-3 { color: var(--tier-3); }
+        .tier-4 { color: var(--tier-4); }
+        
+        .article-content {
+            padding: 20px;
+        }
+        
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        
+        .source-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background-color: var(--bg-tertiary);
+        }
+        
+        .source-name {
+            color: var(--accent-green);
+        }
+        
+        .article-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .article-excerpt {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-subtle);
+        }
+        
+        .engagement-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .save-btn {
+            padding: 6px 12px;
+            background: none;
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .save-btn:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+        
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            width: 56px;
+            height: 56px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(44, 174, 88, 0.4);
+            transition: all 0.3s;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(44, 174, 88, 0.6);
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .article-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo-section">
+            <div class="logo">
+                <div class="logo-icon">F</div>
+                <span>Filterie</span>
+            </div>
+            <button class="upgrade-btn">Upgrade</button>
+        </div>
+        
+        <nav class="nav-section">
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">📅</span>
+                <span>Today</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📑</span>
+                <span>Follow Sources</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🤖</span>
+                <span>Create AI Feed</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔍</span>
+                <span>Search</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📚</span>
+                <span>Read Later</span>
+            </a>
+        </nav>
+        
+        <div class="feeds-section">
+            <h3 class="feeds-header">Feeds</h3>
+            <div style="padding: 40px 20px; text-align: center; color: var(--text-tertiary);">
+                <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+                <p style="font-size: 14px; margin-bottom: 8px;">Keep up with your favorite feeds and keyword alerts</p>
+            </div>
+            <button class="create-folder-btn">Create A Folder</button>
+        </div>
+    </aside>
+    
+    <main class="main-content">
+        <header class="content-header">
+            <div>
+                <h1 class="page-title">Today</h1>
+                <p class="page-subtitle">The insights you need to keep ahead</p>
+            </div>
+            <div class="header-controls">
+                <div class="view-toggle">
+                    <button class="view-btn active">✓</button>
+                    <button class="view-btn">☰</button>
+                    <button class="view-btn">⟲</button>
+                </div>
+            </div>
+        </header>
+        
+        <nav class="tab-nav">
+            <div class="tab-item active">Me</div>
+            <div class="tab-item">Explore</div>
+        </nav>
+        
+        <div class="articles-container">
+            <section class="trending-section">
+                <h2 class="section-title">Trending in tech</h2>
+                <div class="article-grid">
+                    <article class="article-card">
+                        <div class="article-image">
+                            <div class="tier-indicator tier-1">⭐ Tier 1</div>
+                        </div>
+                        <div class="article-content">
+                            <div class="article-meta">
+                                <div class="source-icon"></div>
+                                <span class="source-name">OpenAI公式</span>
+                                <span>•</span>
+                                <span>2時間前</span>
+                            </div>
+                            <h3 class="article-title">GPT-5開発の最新進捗：マルチモーダルAIの新たな地平</h3>
+                            <p class="article-excerpt">OpenAIは次世代言語モデルGPT-5の開発状況を発表。従来モデルを大幅に上回る推論能力と、画像・音声・動画を統合的に理解する能力を実現...</p>
+                            <div class="article-footer">
+                                <div class="engagement-stats">
+                                    <span class="stat-item">👁 5.2k views</span>
+                                    <span class="stat-item">💬 234</span>
+                                </div>
+                                <button class="save-btn">Save</button>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article class="article-card">
+                        <div class="article-image">
+                            <div class="tier-indicator tier-2">⭐ Tier 2</div>
+                        </div>
+                        <div class="article-content">
+                            <div class="article-meta">
+                                <div class="source-icon"></div>
+                                <span class="source-name">日経新聞</span>
+                                <span>•</span>
+                                <span>4時間前</span>
+                            </div>
+                            <h3 class="article-title">日本企業のDX推進、AI活用で新たなフェーズへ</h3>
+                            <p class="article-excerpt">経済産業省の最新調査によると、日本企業の7割がAIを活用したDXプロジェクトを推進。特に製造業での生産性向上が顕著に...</p>
+                            <div class="article-footer">
+                                <div class="engagement-stats">
+                                    <span class="stat-item">👁 3.1k views</span>
+                                    <span class="stat-item">💬 89</span>
+                                </div>
+                                <button class="save-btn">Save</button>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article class="article-card">
+                        <div class="article-image">
+                            <div class="tier-indicator tier-1">⭐ Tier 1</div>
+                        </div>
+                        <div class="article-content">
+                            <div class="article-meta">
+                                <div class="source-icon"></div>
+                                <span class="source-name">Apple Newsroom</span>
+                                <span>•</span>
+                                <span>6時間前</span>
+                            </div>
+                            <h3 class="article-title">Vision Pro 2発表：空間コンピューティングの革新</h3>
+                            <p class="article-excerpt">Appleが次世代空間コンピューティングデバイス「Vision Pro 2」を発表。解像度が2倍向上し、重量は30%軽量化を実現...</p>
+                            <div class="article-footer">
+                                <div class="engagement-stats">
+                                    <span class="stat-item">👁 8.7k views</span>
+                                    <span class="stat-item">💬 456</span>
+                                </div>
+                                <button class="save-btn">Save</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+            
+            <section class="trending-section">
+                <h2 class="section-title">From your AI Feed</h2>
+                <div class="article-grid">
+                    <article class="article-card">
+                        <div class="article-image">
+                            <div class="tier-indicator tier-3">⭐ Tier 3</div>
+                        </div>
+                        <div class="article-content">
+                            <div class="article-meta">
+                                <div class="source-icon"></div>
+                                <span class="source-name">TechBlog</span>
+                                <span>•</span>
+                                <span>1日前</span>
+                            </div>
+                            <h3 class="article-title">Rust vs Go：2024年のバックエンド開発言語選択ガイド</h3>
+                            <p class="article-excerpt">パフォーマンス、開発効率、エコシステムの観点から、RustとGoを徹底比較。実際のプロジェクトでの選択基準を解説...</p>
+                            <div class="article-footer">
+                                <div class="engagement-stats">
+                                    <span class="stat-item">👁 2.3k views</span>
+                                    <span class="stat-item">💬 178</span>
+                                </div>
+                                <button class="save-btn">Save</button>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article class="article-card">
+                        <div class="article-image">
+                            <div class="tier-indicator tier-2">⭐ Tier 2</div>
+                        </div>
+                        <div class="article-content">
+                            <div class="article-meta">
+                                <div class="source-icon"></div>
+                                <span class="source-name">MIT Tech Review</span>
+                                <span>•</span>
+                                <span>1日前</span>
+                            </div>
+                            <h3 class="article-title">量子コンピューティングの実用化：2024年の最新動向</h3>
+                            <p class="article-excerpt">IBMとGoogleが量子優位性の実証に成功。金融、医療、材料科学分野での実用化が加速...</p>
+                            <div class="article-footer">
+                                <div class="engagement-stats">
+                                    <span class="stat-item">👁 4.5k views</span>
+                                    <span class="stat-item">💬 267</span>
+                                </div>
+                                <button class="save-btn">Save</button>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article class="article-card">
+                        <div class="article-image">
+                            <div class="tier-indicator tier-4">⭐ Tier 4</div>
+                        </div>
+                        <div class="article-content">
+                            <div class="article-meta">
+                                <div class="source-icon"></div>
+                                <span class="source-name">個人ブログ</span>
+                                <span>•</span>
+                                <span>2日前</span>
+                            </div>
+                            <h3 class="article-title">Next.js 14実践ガイド：App Routerを使いこなす</h3>
+                            <p class="article-excerpt">実際のプロジェクトでNext.js 14のApp Routerを使って学んだベストプラクティスとハマりポイントを共有...</p>
+                            <div class="article-footer">
+                                <div class="engagement-stats">
+                                    <span class="stat-item">👁 1.2k views</span>
+                                    <span class="stat-item">💬 45</span>
+                                </div>
+                                <button class="save-btn">Save</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </div>
+        
+        <div class="fab">
+            <span style="font-size: 24px;">+</span>
+        </div>
+    </main>
+</body>
+</html>

@@ -20,6 +20,7 @@ model User {
   preferences       UserPreference?
   bookmarks         Bookmark[]
   trays             Tray[]
+  searchHistory     SearchHistory[]
 }
 
 model Source {
@@ -55,6 +56,8 @@ model Article {
   fetchedAt         DateTime          @default(now())
   imageUrl          String?
   author            String?
+  readCount         Int               @default(0)
+  isArchived        Boolean           @default(false)
   tags              Tag[]
   readArticles      ReadArticle[]
   bookmarks         Bookmark[]
@@ -209,4 +212,17 @@ model TrayItem {
   @@unique([trayId, articleId])
   @@index([trayId])
   @@index([articleId])
+}
+
+// 検索履歴
+model SearchHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
 }

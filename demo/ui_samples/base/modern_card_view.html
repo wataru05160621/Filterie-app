@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filterie - Card View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --bg-hover: #242424;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-tertiary: #707070;
+            --accent-primary: #00dc82;
+            --accent-secondary: #00a060;
+            --border-color: #2a2a2a;
+            --tier-1: #ffd700;
+            --tier-2: #e5e4e2;
+            --tier-3: #cd7f32;
+            --tier-4: #808080;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Minimal Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background-color: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+        }
+        
+        .header-content {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+        
+        .nav-link.active {
+            color: var(--accent-primary);
+        }
+        
+        /* Filter Bar */
+        .filter-bar {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background-color: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            z-index: 900;
+        }
+        
+        .filter-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-chip {
+            padding: 8px 16px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        
+        .filter-chip:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--accent-primary);
+        }
+        
+        .filter-chip.active {
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+            border-color: var(--accent-primary);
+        }
+        
+        .filter-divider {
+            width: 1px;
+            height: 24px;
+            background-color: var(--border-color);
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-top: 128px;
+            padding: 32px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Masonry Grid */
+        .masonry-grid {
+            columns: 4;
+            column-gap: 24px;
+        }
+        
+        @media (max-width: 1400px) {
+            .masonry-grid { columns: 3; }
+        }
+        
+        @media (max-width: 1024px) {
+            .masonry-grid { columns: 2; }
+        }
+        
+        @media (max-width: 640px) {
+            .masonry-grid { columns: 1; }
+        }
+        
+        /* Article Card */
+        .article-card {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            break-inside: avoid;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .article-card.has-image .card-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .article-card.text-only {
+            border: 1px solid var(--border-color);
+        }
+        
+        .article-card.text-only:hover {
+            border-color: var(--accent-primary);
+        }
+        
+        .card-content {
+            padding: 20px;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .source-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .source-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background-color: var(--bg-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .tier-indicator {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tier-1 { color: var(--tier-1); }
+        .tier-2 { color: var(--tier-2); }
+        .tier-3 { color: var(--tier-3); }
+        .tier-4 { color: var(--tier-4); }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .card-excerpt {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        
+        /* Rich Content Cards */
+        .quote-card {
+            background: linear-gradient(135deg, #1e3a5f, #1a1a1a);
+            border: none;
+            position: relative;
+        }
+        
+        .quote-card::before {
+            content: '"';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 60px;
+            opacity: 0.1;
+            font-family: Georgia, serif;
+        }
+        
+        .quote-text {
+            font-size: 20px;
+            font-weight: 500;
+            line-height: 1.5;
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+        
+        .quote-author {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* Visual Card */
+        .visual-card {
+            background: linear-gradient(135deg, #2d1b69, #0f3443);
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .visual-content {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .visual-title {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 16px;
+        }
+        
+        .visual-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        
+        /* Card Footer */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+        
+        .card-stats {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-hover);
+        }
+        
+        /* Loading Animation */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Floating Action Button */
+        .fab-container {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: flex-end;
+        }
+        
+        .fab {
+            width: 56px;
+            height: 56px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s;
+            font-size: 24px;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(0, 220, 130, 0.4);
+        }
+        
+        .fab-secondary {
+            width: 48px;
+            height: 48px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            font-size: 20px;
+        }
+        
+        .fab-secondary:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-icon">F</div>
+                <span>Filterie</span>
+            </div>
+            <nav class="header-nav">
+                <a href="#" class="nav-link active">Feed</a>
+                <a href="#" class="nav-link">Sources</a>
+                <a href="#" class="nav-link">Saved</a>
+                <a href="#" class="nav-link">Analytics</a>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="filter-bar">
+        <div class="filter-container">
+            <div class="filter-chip active">
+                <span>🔥</span>
+                <span>All</span>
+            </div>
+            <div class="filter-chip">
+                <span>⭐</span>
+                <span>Tier 1 Only</span>
+            </div>
+            <div class="filter-chip">
+                <span>🤖</span>
+                <span>AI & Tech</span>
+            </div>
+            <div class="filter-chip">
+                <span>💼</span>
+                <span>Business</span>
+            </div>
+            <div class="filter-chip">
+                <span>🔬</span>
+                <span>Science</span>
+            </div>
+            <div class="filter-divider"></div>
+            <div class="filter-chip">
+                <span>📅</span>
+                <span>Today</span>
+            </div>
+            <div class="filter-chip">
+                <span>🌍</span>
+                <span>日本語</span>
+            </div>
+        </div>
+    </div>
+    
+    <main class="main-content">
+        <div class="masonry-grid">
+            <!-- Featured Visual Card -->
+            <article class="article-card visual-card">
+                <div class="visual-content">
+                    <div class="tier-indicator tier-1">⭐ Tier 1</div>
+                    <h2 class="visual-title">GPT-5が切り開く<br>AIの新時代</h2>
+                    <p class="visual-subtitle">OpenAI公式発表：マルチモーダル理解の革新</p>
+                    <div class="source-info" style="color: white;">
+                        <div class="source-avatar">🤖</div>
+                        <span>OpenAI Blog</span>
+                        <span>•</span>
+                        <span>2時間前</span>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Image Card -->
+            <article class="article-card has-image">
+                <img src="data:image/svg+xml,%3Csvg width='400' height='225' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='400' height='225' fill='%23333'/%3E%3C/svg%3E" alt="" class="card-image">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="source-info">
+                            <div class="source-avatar">📰</div>
+                            <span>日経新聞</span>
+                            <span>•</span>
+                            <span>4時間前</span>
+                        </div>
+                        <div class="tier-indicator tier-2">⭐ Tier 2</div>
+                    </div>
+                    <h3 class="card-title">日本企業のDX推進、世界水準との差が明らかに</h3>
+                    <p class="card-excerpt">経済産業省の最新調査によると、日本企業のデジタル化は依然として遅れており...</p>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <span class="stat-item">👁 3.2k</span>
+                            <span class="stat-item">💬 45</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn">📤</button>
+                            <button class="action-btn">🔖</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Quote Card -->
+            <article class="article-card quote-card">
+                <div class="card-content">
+                    <div class="tier-indicator tier-1">⭐ Tier 1</div>
+                    <p class="quote-text">"AIは人間の創造性を置き換えるのではなく、拡張するツールとなる"</p>
+                    <p class="quote-author">— Sam Altman, OpenAI CEO</p>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <span class="stat-item">👁 5.8k</span>
+                            <span class="stat-item">🔁 234</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn">📤</button>
+                            <button class="action-btn">🔖</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Text Only Card -->
+            <article class="article-card text-only">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="source-info">
+                            <div class="source-avatar">🍎</div>
+                            <span>Apple Newsroom</span>
+                            <span>•</span>
+                            <span>6時間前</span>
+                        </div>
+                        <div class="tier-indicator tier-1">⭐ Tier 1</div>
+                    </div>
+                    <h3 class="card-title">Vision Pro 2発表：より軽く、より高解像度に</h3>
+                    <p class="card-excerpt">Appleは本日、空間コンピューティングデバイス「Vision Pro 2」を発表しました。前モデルから30%の軽量化を実現し、ディスプレイ解像度は2倍に向上...</p>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <span class="stat-item">👁 8.7k</span>
+                            <span class="stat-item">💬 156</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn">📤</button>
+                            <button class="action-btn">🔖</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Medium Image Card -->
+            <article class="article-card has-image">
+                <img src="data:image/svg+xml,%3Csvg width='400' height='225' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='400' height='225' fill='%23444'/%3E%3C/svg%3E" alt="" class="card-image">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="source-info">
+                            <div class="source-avatar">💻</div>
+                            <span>GitHub Blog</span>
+                            <span>•</span>
+                            <span>1日前</span>
+                        </div>
+                        <div class="tier-indicator tier-1">⭐ Tier 1</div>
+                    </div>
+                    <h3 class="card-title">GitHub Copilot X: AIペアプログラミングの未来</h3>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <span class="stat-item">👁 4.5k</span>
+                            <span class="stat-item">💬 89</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn">📤</button>
+                            <button class="action-btn">🔖</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Long Text Card -->
+            <article class="article-card text-only">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="source-info">
+                            <div class="source-avatar">🔬</div>
+                            <span>MIT Tech Review</span>
+                            <span>•</span>
+                            <span>1日前</span>
+                        </div>
+                        <div class="tier-indicator tier-2">⭐ Tier 2</div>
+                    </div>
+                    <h3 class="card-title">量子コンピューティングが実用段階へ：金融・創薬分野での応用が加速</h3>
+                    <p class="card-excerpt">IBMとGoogleが相次いで量子優位性の実証に成功したことで、量子コンピューティングの実用化が現実味を帯びてきました。特に金融分野でのリスク計算や、創薬における分子シミュレーションでの活用が期待されています...</p>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <span class="stat-item">👁 2.3k</span>
+                            <span class="stat-item">💬 67</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn">📤</button>
+                            <button class="action-btn">🔖</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Compact Visual Card -->
+            <article class="article-card visual-card" style="min-height: 240px; background: linear-gradient(135deg, #1a3a52, #2d5a3d);">
+                <div class="visual-content">
+                    <div class="tier-indicator tier-3">⭐ Tier 3</div>
+                    <h2 class="visual-title" style="font-size: 22px;">Rust vs Go<br>2024年の選択</h2>
+                    <div class="source-info" style="color: white;">
+                        <div class="source-avatar">🦀</div>
+                        <span>Dev.to</span>
+                        <span>•</span>
+                        <span>2日前</span>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- Small Text Card -->
+            <article class="article-card text-only">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="source-info">
+                            <div class="source-avatar">🚀</div>
+                            <span>SpaceX</span>
+                            <span>•</span>
+                            <span>12時間前</span>
+                        </div>
+                        <div class="tier-indicator tier-1">⭐ Tier 1</div>
+                    </div>
+                    <h3 class="card-title">Starship試験飛行成功、火星への道筋が明確に</h3>
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <span class="stat-item">👁 12k</span>
+                            <span class="stat-item">💬 456</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn">📤</button>
+                            <button class="action-btn">🔖</button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </main>
+    
+    <div class="fab-container">
+        <button class="fab fab-secondary">⚙️</button>
+        <button class="fab fab-secondary">🔍</button>
+        <button class="fab">+</button>
+    </div>
+</body>
+</html>

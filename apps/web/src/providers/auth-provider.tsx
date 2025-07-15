@@ -5,28 +5,26 @@ import { useRouter } from 'next/navigation';
 import { gql, useMutation } from '@apollo/client';
 
 const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      accessToken
+  mutation Login($input: LoginInput!) {
+    login(loginInput: $input) {
+      access_token
       user {
         id
         email
         name
-        avatarUrl
       }
     }
   }
 `;
 
 const REGISTER_MUTATION = gql`
-  mutation Register($email: String!, $password: String!, $name: String!) {
-    register(input: { email: $email, password: $password, name: $name }) {
-      accessToken
+  mutation Register($input: RegisterInput!) {
+    register(registerInput: $input) {
+      access_token
       user {
         id
         email
         name
-        avatarUrl
       }
     }
   }
@@ -78,12 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const { data } = await loginMutation({
-        variables: { email, password },
+        variables: { input: { email, password } },
       });
 
-      const { accessToken, user } = data.login;
+      const { access_token, user } = data.login;
       
-      localStorage.setItem('token', accessToken);
+      localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       
@@ -96,12 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (email: string, password: string, name: string) => {
     try {
       const { data } = await registerMutation({
-        variables: { email, password, name },
+        variables: { input: { email, password, name } },
       });
 
-      const { accessToken, user } = data.register;
+      const { access_token, user } = data.register;
       
-      localStorage.setItem('token', accessToken);
+      localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       

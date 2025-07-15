@@ -24,7 +24,7 @@ export class UserPreference {
   @Field()
   emailDigest: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   digestFrequency?: string | null;
 
   @Field()

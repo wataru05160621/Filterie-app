@@ -11,7 +11,7 @@ export class Source {
   @Field()
   url: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   feedUrl?: string | null;
 
   @Field(() => Int)
@@ -26,7 +26,7 @@ export class Source {
   @Field()
   isActive: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Date, { nullable: true })
   lastFetchedAt?: Date | null;
 
   @Field()

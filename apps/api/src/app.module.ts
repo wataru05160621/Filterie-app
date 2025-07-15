@@ -16,6 +16,7 @@ import { PreferencesModule } from './modules/preferences/preferences.module';
 import { PubSubModule } from './modules/pubsub/pubsub.module';
 import { TierModule } from './modules/tier/tier.module';
 import { TraysModule } from './modules/trays/trays.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { TraysModule } from './modules/trays/trays.module';
     PreferencesModule,
     TierModule,
     TraysModule,
+    SearchModule,
   ],
   controllers: [],
   providers: [],

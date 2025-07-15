@@ -1,0 +1,422 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input AddItemToTrayDto {
+  articleId: String!
+  note: String
+}
+
+type Article {
+  aiSummary: String
+  author: String
+  content: String
+  createdAt: DateTime!
+  fetchedAt: DateTime!
+  id: ID!
+  imageUrl: String
+  originalUrl: String!
+  publishedAt: DateTime!
+  source: Source!
+  sourceId: String!
+  summary: String
+  tags: [Tag!]!
+  title: String!
+  updatedAt: DateTime!
+}
+
+type ArticleConnection {
+  edges: [ArticleEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ArticleEdge {
+  cursor: String!
+  node: Article!
+}
+
+input ArticleFilterInput {
+  hasAiSummary: Boolean
+  language: String
+  maxTier: Int
+  minTier: Int
+  publishedAfter: String
+  publishedBefore: String
+  searchQuery: String
+  sourceIds: [String!]
+  tagNames: [String!]
+  unreadOnly: Boolean
+}
+
+type AuthPayload {
+  access_token: String!
+  refresh_token: String!
+  user: AuthUser!
+}
+
+type AuthUser {
+  email: String!
+  id: ID!
+  name: String!
+}
+
+type BulkSummaryResult {
+  errors: [String!]!
+  failed: Int!
+  successful: Int!
+  total: Int!
+}
+
+input CreateArticleInput {
+  author: String
+  content: String
+  imageUrl: String
+  originalUrl: String!
+  publishedAt: String!
+  sourceId: String!
+  summary: String
+  tagNames: [String!]
+  title: String!
+}
+
+input CreateSourceInput {
+  category: String!
+  feedUrl: String
+  language: String
+  name: String!
+  url: String!
+}
+
+input CreateTrayDto {
+  description: String
+  isPublic: Boolean! = false
+  name: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  addPreferredTag(tagName: String!): UserPreference!
+  addToTray(input: AddItemToTrayDto!, trayId: String!): TrayItem!
+  bookmarkArticle(articleId: ID!, note: String): Boolean!
+  createArticle(input: CreateArticleInput!): Article!
+  createSource(input: CreateSourceInput!): Source!
+  createTray(input: CreateTrayDto!): Tray!
+  deleteAccount: Boolean!
+  deleteArticle(id: ID!): Boolean!
+  deleteSource(id: ID!): Boolean!
+  deleteTray(id: String!): Boolean!
+  evaluateSourceTier(url: String!): TierEvaluation!
+
+  """Generate AI summary for a single article"""
+  generateAiSummary(articleId: ID!): Article!
+
+  """Generate AI summaries for multiple articles"""
+  generateBulkSummaries(articleIds: [ID!]!): BulkSummaryResult!
+
+  """Generate tag suggestions for an article"""
+  generateTagSuggestions(articleId: ID!): [String!]!
+  login(loginInput: LoginInput!): AuthPayload!
+  markArticleAsRead(articleId: ID!, readDuration: Float): Boolean!
+  refreshToken(refreshTokenInput: RefreshTokenInput!): RefreshTokenPayload!
+  register(registerInput: RegisterInput!): AuthPayload!
+  removeBookmark(articleId: ID!): Boolean!
+  removeFromTray(itemId: String!): Boolean!
+  removePreferredTag(tagName: String!): UserPreference!
+  saveSearchHistory(input: SaveSearchHistoryInput!): Boolean!
+  updateArticle(id: ID!, input: UpdateArticleInput!): Article!
+  updatePreferences(input: UpdatePreferenceInput!): UserPreference!
+  updateProfile(updateUserInput: UpdateUserInput!): User!
+  updateSource(id: ID!, input: UpdateSourceInput!): Source!
+  updateSourceTier(reasoning: String!, sourceId: String!, tier: Float!): Source!
+  updateTray(id: String!, input: UpdateTrayDto!): Tray!
+}
+
+type PageInfo {
+  endCursor: String!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String!
+}
+
+input PaginationInput {
+  limit: Int = 10
+  offset: Int = 0
+}
+
+type Query {
+  article(id: ID!): Article
+  articleByUrl(url: String!): Article
+  articles(filter: ArticleFilterInput, pagination: PaginationInput): ArticleConnection!
+  evaluateSourceTier(url: String!): TierEvaluationResult!
+  getSearchHistory(userId: String!): [SearchHistory!]!
+  getSearchSuggestions(query: String!): [String!]!
+  me: User!
+  myPreferences: UserPreference!
+  myTrayStats: TrayStats!
+  myTrays: [Tray!]!
+  personalizedArticles(limit: Float! = 20): [Article!]!
+  publicTrays: [Tray!]!
+  recommendedSources: [Source!]!
+  searchArticles(input: SearchInput!): [Article!]!
+  source(id: ID!): Source
+  sources(filter: SourceFilterInput, pagination: PaginationInput): SourceConnection!
+  tierStats: TierStats!
+  tray(id: String!): Tray!
+  user(id: String!): User
+  users(filter: UserFilterInput): UserConnection!
+}
+
+input RefreshTokenInput {
+  refresh_token: String!
+}
+
+type RefreshTokenPayload {
+  access_token: String!
+  refresh_token: String!
+}
+
+input RegisterInput {
+  email: String!
+  name: String!
+  password: String!
+}
+
+input SaveSearchHistoryInput {
+  query: String!
+  userId: String!
+}
+
+input SearchFilters {
+  publishedAfter: DateTime
+  publishedBefore: DateTime
+  sourceId: String
+}
+
+type SearchHistory {
+  createdAt: DateTime!
+  id: ID!
+  query: String!
+  updatedAt: DateTime!
+  userId: String!
+}
+
+input SearchInput {
+  fields: [String!]!
+  filters: SearchFilters
+  pagination: SearchPagination
+  query: String!
+  sortBy: String
+  sortOrder: String
+}
+
+input SearchPagination {
+  limit: Int!
+  page: Int!
+}
+
+type Source {
+  category: String!
+  createdAt: DateTime!
+  feedUrl: String
+  id: ID!
+  isActive: Boolean!
+  language: String!
+  lastFetchedAt: DateTime
+  name: String!
+  sourceTierBadge: TierBadge!
+  tier: Int!
+  updatedAt: DateTime!
+  url: String!
+}
+
+type SourceConnection {
+  edges: [SourceEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type SourceEdge {
+  cursor: String!
+  node: Source!
+}
+
+type SourceFeedFetchedPayload {
+  newArticlesCount: Float!
+  sourceId: ID!
+  sourceName: String!
+  timestamp: DateTime!
+}
+
+input SourceFilterInput {
+  category: String
+  isActive: Boolean
+  language: String
+  tier: Int
+}
+
+type Subscription {
+  articleCreated(sourceId: ID): Article!
+  articleUpdated: Article!
+
+  """情報源のフィード取得完了通知"""
+  sourceFeedFetched: SourceFeedFetchedPayload!
+  sourceUpdated: Source!
+}
+
+type Tag {
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+}
+
+type TierBadge {
+  color: String!
+  description: String!
+  icon: String!
+  label: String!
+  tier: Int!
+}
+
+type TierClassificationObject {
+  confidence: Float!
+  reasoning: [String!]!
+  tier: Int!
+  verificationStatus: String!
+}
+
+type TierCount {
+  count: Int!
+  tier: Int!
+}
+
+type TierEvaluation {
+  confidence: Float!
+  reasons: [String!]!
+  tier: Int!
+}
+
+type TierEvaluationResult {
+  tier: TierClassificationObject!
+  url: String!
+}
+
+type TierStats {
+  tierCounts: [TierCount!]!
+  totalSourceCount: Int!
+  verifiedSourceCount: Int!
+}
+
+type Tray {
+  createdAt: DateTime!
+  description: String
+  id: String!
+  isPublic: Boolean!
+  itemCount: Int!
+  items: [TrayItem!]
+  name: String!
+  updatedAt: DateTime!
+  user: User
+  userId: String!
+}
+
+type TrayItem {
+  article: Article
+  articleId: String!
+  createdAt: DateTime!
+  id: String!
+  note: String
+  trayId: String!
+}
+
+type TrayStats {
+  publicTrays: Int!
+  totalItems: Int!
+  trayCount: Int!
+}
+
+input UpdateArticleInput {
+  aiSummary: String
+  author: String
+  content: String
+  imageUrl: String
+  summary: String
+  tagNames: [String!]
+  title: String
+}
+
+input UpdatePreferenceInput {
+  digestFrequency: String
+  emailDigest: Boolean
+  languages: [String!]
+  maxTier: Int
+  minTier: Int
+  preferredTagNames: [String!]
+}
+
+input UpdateSourceInput {
+  category: String
+  feedUrl: String
+  isActive: Boolean
+  language: String
+  name: String
+  tier: Int
+  url: String
+}
+
+input UpdateTrayDto {
+  description: String
+  isPublic: Boolean = false
+  name: String
+}
+
+input UpdateUserInput {
+  email: String
+  name: String
+  password: String
+}
+
+type User {
+  avatarUrl: String
+  createdAt: DateTime!
+  email: String!
+  id: ID!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type UserConnection {
+  items: [User!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+input UserFilterInput {
+  limit: Int = 10
+  page: Int = 1
+  search: String
+}
+
+type UserPreference {
+  createdAt: DateTime!
+  digestFrequency: String
+  emailDigest: Boolean!
+  id: ID!
+  languages: [String!]!
+  maxTier: Int!
+  minTier: Int!
+  preferredTags: [Tag!]!
+  updatedAt: DateTime!
+  userId: String!
+}

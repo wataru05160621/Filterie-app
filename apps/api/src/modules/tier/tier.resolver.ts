@@ -11,8 +11,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TierClassifierService, TierClassification, VerificationStatus } from './tier-classifier.service';
 import { SourcesService } from '../sources/sources.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Source } from '../sources/entities/source.entity';
 
-@Resolver()
+@Resolver(() => Source)
 @UseGuards(JwtAuthGuard)
 export class TierResolver {
   constructor(
@@ -65,7 +66,7 @@ export class TierResolver {
     return updatedSource;
   }
 
-  @ResolveField('tierBadge')
+  @ResolveField(() => TierBadge)
   sourceTierBadge(@Parent() source: any) {
     return this.tierClassifier.getTierBadgeInfo(source.tier);
   }
@@ -161,10 +162,21 @@ class TierCount {
   count: number;
 }
 
-// Temporary Source type
-class Source {
-  id: string;
-  name: string;
-  url: string;
+@ObjectType()
+class TierBadge {
+  @Field(() => Int)
   tier: number;
+
+  @Field()
+  label: string;
+
+  @Field()
+  color: string;
+
+  @Field()
+  icon: string;
+
+  @Field()
+  description: string;
 }
+

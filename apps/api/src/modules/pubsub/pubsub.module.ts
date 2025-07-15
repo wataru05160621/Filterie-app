@@ -2,6 +2,7 @@ import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisPubSub } from 'graphql-redis-subscriptions';
 import Redis from 'ioredis';
+import { PubSubService } from './pubsub.service';
 
 export const PUB_SUB = 'PUB_SUB';
 
@@ -33,7 +34,8 @@ export const PUB_SUB = 'PUB_SUB';
       },
       inject: [ConfigService],
     },
+    PubSubService,
   ],
-  exports: [PUB_SUB],
+  exports: [PUB_SUB, PubSubService],
 })
 export class PubSubModule {}

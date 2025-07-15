@@ -1,13 +1,12 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import * as Parser from 'rss-parser';
+import { Cron } from '@nestjs/schedule';
+import Parser from 'rss-parser';
 import axios from 'axios';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ArticlesService } from '../articles/articles.service';
 import { SourcesService } from '../sources/sources.service';
-import { PubSubEngine } from 'graphql-subscriptions';
 import { PUB_SUB } from '../pubsub/pubsub.module';
-import { SubscriptionEvent, SourceFeedFetchedPayload } from '../pubsub/subscription-events';
+// import { SubscriptionEvent, SourceFeedFetchedPayload } from '../pubsub/subscription-events';
 
 interface FeedItem {
   title?: string;
@@ -34,7 +33,7 @@ export class FeedService {
     private readonly prisma: PrismaService,
     private readonly articlesService: ArticlesService,
     private readonly sourcesService: SourcesService,
-    @Inject(PUB_SUB) private pubSub: PubSubEngine,
+    @Inject(PUB_SUB) private pubSub: any,
   ) {
     this.parser = new Parser({
       customFields: {
@@ -48,91 +47,97 @@ export class FeedService {
   }
 
   // 15分ごとにフィードを取得
-  @Cron(CronExpression.EVERY_15_MINUTES)
+  @Cron('0 */15 * * * *')
   async handleCron() {
     this.logger.log('Starting scheduled feed fetch...');
-    await this.fetchAllFeeds();
+    await this.fetchAllActiveFeeds();
   }
 
-  async fetchAllFeeds() {
+  async fetchAllActiveFeeds() {
     const activeSources = await this.prisma.source.findMany({
       where: {
         isActive: true,
-        feedUrl: { not: null },
       },
     });
 
     this.logger.log(`Found ${activeSources.length} active sources to fetch`);
 
-    const results = await Promise.allSettled(
-      activeSources.map(source => this.fetchFeed(source)),
-    );
+    for (const source of activeSources) {
+      if (!source.feedUrl) {
+        this.logger.warn(`Source ${source.name} has no feed URL`);
+        continue;
+      }
 
-    const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
-
-    this.logger.log(`Feed fetch completed: ${successful} successful, ${failed} failed`);
-
-    return { successful, failed, total: activeSources.length };
+      try {
+        await this.fetchSourceFeed(source.id, source.feedUrl);
+        await this.sourcesService.updateLastFetched(source.id);
+      } catch (error) {
+        this.logger.error(`Failed to fetch feed for ${source.name}:`, error);
+        await this.sourcesService.updateLastError(source.id, error instanceof Error ? error.message : String(error));
+      }
+    }
   }
 
-  async fetchFeed(source: any) {
+  async fetchSourceFeed(sourceId: string, feedUrl: string) {
     try {
-      this.logger.log(`Fetching feed for ${source.name} (${source.feedUrl})`);
+      this.logger.log(`Fetching feed from ${feedUrl}`);
 
-      const feed = await this.parser.parseURL(source.feedUrl);
-      const newArticles = [];
+      const feed = await this.parser.parseURL(feedUrl);
+      const errors: string[] = [];
+      let fetchedCount = 0;
+      let newCount = 0;
 
       for (const item of feed.items as FeedItem[]) {
-        if (!item.link) continue;
+        fetchedCount++;
+        if (!item.link) {
+          errors.push(`Item without link: ${item.title}`);
+          continue;
+        }
 
         // 既存の記事をチェック
-        const existingArticle = await this.articlesService.findByUrl(item.link);
+        const existingArticle = await this.articlesService.findByOriginalUrl(item.link);
         if (existingArticle) continue;
 
         try {
           // 記事の作成
-          const article = await this.articlesService.create({
-            sourceId: source.id,
+          await this.articlesService.create({
+            sourceId,
             originalUrl: item.link,
             title: item.title || 'Untitled',
             content: item.content || item.contentSnippet || '',
             summary: item.contentSnippet || this.extractSummary(item.content || ''),
             publishedAt: item.isoDate || item.pubDate || new Date().toISOString(),
             imageUrl: this.extractImageUrl(item),
-            author: item.creator || feed.title || source.name,
+            author: item.creator || feed.title || 'Unknown',
             tagNames: item.categories || [],
           });
 
-          newArticles.push(article);
+          newCount++;
         } catch (error) {
           this.logger.error(`Failed to create article from ${item.link}:`, error);
+          errors.push(`Failed to create article: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
 
-      // 最終取得時刻を更新
-      await this.prisma.source.update({
-        where: { id: source.id },
-        data: { lastFetchedAt: new Date() },
-      });
-
-      this.logger.log(`Added ${newArticles.length} new articles from ${source.name}`);
+      this.logger.log(`Fetched ${fetchedCount} items, created ${newCount} new articles`);
       
       // フィード取得完了を通知
-      if (newArticles.length > 0) {
-        await this.pubSub.publish(SubscriptionEvent.SOURCE_FEED_FETCHED, {
-          [SubscriptionEvent.SOURCE_FEED_FETCHED]: {
-            sourceId: source.id,
-            sourceName: source.name,
-            newArticlesCount: newArticles.length,
-            timestamp: new Date(),
-          } as SourceFeedFetchedPayload,
+      if (newCount > 0) {
+        await this.pubSub.publish('sourceFeedFetched', {
+          sourceId,
+          articleCount: newCount,
+          timestamp: new Date(),
         });
       }
 
-      return { source, newArticles: newArticles.length };
+      return {
+        sourceId,
+        fetchedCount,
+        newCount,
+        errors,
+      };
     } catch (error) {
-      this.logger.error(`Failed to fetch feed for ${source.name}:`, error);
+      this.logger.error(`Failed to fetch feed from ${feedUrl}:`, error);
       throw error;
     }
   }
@@ -143,7 +148,7 @@ export class FeedService {
       throw new Error('Source does not have a feed URL');
     }
 
-    return this.fetchFeed(source);
+    return this.fetchSourceFeed(sourceId, source.feedUrl);
   }
 
   async subscribeToWebSub(hubUrl: string, topicUrl: string, callbackUrl: string) {
@@ -249,5 +254,57 @@ export class FeedService {
     }
     
     return truncated.trim() + '...';
+  }
+
+  async fetchFeed(feedUrl: string) {
+    try {
+      const feed = await this.parser.parseURL(feedUrl);
+      const articles = [];
+
+      for (const item of feed.items as FeedItem[]) {
+        if (!item.link) continue;
+
+        articles.push({
+          url: item.link,
+          title: item.title || 'Untitled',
+          content: item.content || item.contentSnippet || '',
+          summary: item.contentSnippet || this.extractSummary(item.content || ''),
+          publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
+          imageUrl: this.extractImageUrl(item),
+          author: item.creator || feed.title || 'Unknown',
+          tags: item.categories || [],
+        });
+      }
+
+      return articles;
+    } catch (error) {
+      this.logger.error(`Failed to fetch feed from ${feedUrl}:`, error);
+      throw error;
+    }
+  }
+
+  async fetchAllFeeds() {
+    const sources = await this.prisma.source.findMany({
+      where: { isActive: true },
+    });
+
+    const results = await Promise.allSettled(
+      sources.map(source => this.fetchSingleFeed(source.id))
+    );
+
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+
+    return {
+      total: sources.length,
+      successful,
+      failed,
+      sources: sources.map((source, index) => ({
+        id: source.id,
+        name: source.name,
+        status: results[index]?.status || 'unknown',
+        error: results[index]?.status === 'rejected' ? (results[index] as PromiseRejectedResult).reason : null,
+      })),
+    };
   }
 }

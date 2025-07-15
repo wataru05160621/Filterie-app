@@ -10,8 +10,8 @@ import { ArticleFilterInput } from './dto/article-filter.input';
 import { PaginationInput } from '../common/dto/pagination.input';
 import { ArticleConnection } from './dto/article-connection';
 import { User } from '../users/entities/user.entity';
-import { PubSubEngine } from 'graphql-subscriptions';
 import { PUB_SUB } from '../pubsub/pubsub.module';
+import { PubSubService } from '../pubsub/pubsub.service';
 import { SubscriptionEvent, ArticleCreatedPayload, ArticleUpdatedPayload } from '../pubsub/subscription-events';
 
 @Resolver(() => Article)
@@ -19,7 +19,8 @@ import { SubscriptionEvent, ArticleCreatedPayload, ArticleUpdatedPayload } from 
 export class ArticlesResolver {
   constructor(
     private readonly articlesService: ArticlesService,
-    @Inject(PUB_SUB) private pubSub: PubSubEngine,
+    @Inject(PUB_SUB) private pubSub: any,
+    private readonly pubSubService: PubSubService,
   ) {}
 
   @Mutation(() => Article)
@@ -120,13 +121,15 @@ export class ArticlesResolver {
     },
   })
   articleCreated(
-    @Args('sourceId', { type: () => ID, nullable: true }) sourceId?: string,
+    @Args('sourceId', { type: () => ID, nullable: true }) _sourceId?: string,
   ) {
-    return this.pubSub.asyncIterator(SubscriptionEvent.ARTICLE_CREATED);
+    return this.pubSubService.asyncIterator('articleCreated');
   }
   
   @Subscription(() => Article)
-  articleUpdated() {
-    return this.pubSub.asyncIterator(SubscriptionEvent.ARTICLE_UPDATED);
+  articleUpdated(
+    @Args('sourceId', { type: () => ID, nullable: true }) _sourceId?: string,
+  ) {
+    return this.pubSubService.asyncIterator('articleUpdated');
   }
 }

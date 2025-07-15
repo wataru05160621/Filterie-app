@@ -5,6 +5,9 @@ import {
   Args,
   ResolveField,
   Parent,
+  ObjectType,
+  Field,
+  Int,
 } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -13,6 +16,23 @@ import { TraysService } from './trays.service';
 import { CreateTrayDto } from './dto/create-tray.dto';
 import { UpdateTrayDto } from './dto/update-tray.dto';
 import { AddItemToTrayDto } from './dto/add-item-to-tray.dto';
+
+// Import entities
+import { Tray, TrayItem } from './entities/tray.entity';
+import { User } from '../users/entities/user.entity';
+
+
+@ObjectType()
+class TrayStats {
+  @Field(() => Int)
+  trayCount: number;
+
+  @Field(() => Int)
+  totalItems: number;
+
+  @Field(() => Int)
+  publicTrays: number;
+}
 
 @Resolver(() => Tray)
 @UseGuards(JwtAuthGuard)
@@ -82,94 +102,8 @@ export class TraysResolver {
     return tray._count?.items || 0;
   }
 
-  @ResolveField('owner')
-  owner(@Parent() tray: any) {
+  @ResolveField(() => User, { name: 'user', nullable: true })
+  async getUser(@Parent() tray: any) {
     return tray.user || null;
   }
-}
-
-// GraphQL Types
-import { ObjectType, Field, Int } from '@nestjs/graphql';
-
-@ObjectType()
-class Tray {
-  @Field()
-  id: string;
-
-  @Field()
-  userId: string;
-
-  @Field()
-  name: string;
-
-  @Field({ nullable: true })
-  description?: string;
-
-  @Field()
-  isPublic: boolean;
-
-  @Field(() => [TrayItem], { nullable: true })
-  items?: TrayItem[];
-
-  @Field(() => Int)
-  itemCount: number;
-
-  @Field(() => User, { nullable: true })
-  owner?: User;
-
-  @Field()
-  createdAt: Date;
-
-  @Field()
-  updatedAt: Date;
-}
-
-@ObjectType()
-class TrayItem {
-  @Field()
-  id: string;
-
-  @Field()
-  trayId: string;
-
-  @Field()
-  articleId: string;
-
-  @Field({ nullable: true })
-  note?: string;
-
-  @Field(() => Article, { nullable: true })
-  article?: Article;
-
-  @Field()
-  addedAt: Date;
-}
-
-@ObjectType()
-class TrayStats {
-  @Field(() => Int)
-  trayCount: number;
-
-  @Field(() => Int)
-  totalItems: number;
-
-  @Field(() => Int)
-  publicTrays: number;
-}
-
-// Placeholder types - should be imported from their respective modules
-class User {
-  @Field()
-  id: string;
-
-  @Field()
-  name: string;
-}
-
-class Article {
-  @Field()
-  id: string;
-
-  @Field()
-  title: string;
 }

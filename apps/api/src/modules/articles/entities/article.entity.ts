@@ -19,13 +19,13 @@ export class Article {
   @Field()
   title: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   content?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   summary?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   aiSummary?: string | null;
 
   @Field()
@@ -34,10 +34,10 @@ export class Article {
   @Field()
   fetchedAt: Date;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   imageUrl?: string | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   author?: string | null;
 
   @Field(() => [Tag])
